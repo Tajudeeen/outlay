@@ -53,9 +53,9 @@ Put a deterministic authorization boundary between autonomous agents and spendin
 2. API authenticates and normalizes it.
 3. Risk service evaluates configured signals.
 4. Contract validates agent scope, policy, expiry, nonce, and budget.
-5. Contract records authorization/denial atomically.
+5. Contract records authorization atomically and reserves policy budget. Expired reservations require explicit reconciliation.
 6. Only an authorized canonical payload reaches the execution adapter.
-7. Transaction status is independently observed.
+7. Transaction status is independently observed. Authorization and reservation records are not settlement evidence.
 8. Receipt records the actual lifecycle and evidence.
 
 Exact ordering and on-chain/off-chain responsibilities will be finalized in ADRs before execution integration.
