@@ -54,6 +54,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Failure injection and fail-closed tests.
 
 ## Milestone 6: dashboard and evidence
+- [x] Read-only testnet views for policy, agent grant, and decision receipt (source and CI tests added, final browser RPC check pending).
 - [ ] Policy and agent management views.
 - [ ] Intent/decision timeline.
 - [ ] Receipt verification display.
