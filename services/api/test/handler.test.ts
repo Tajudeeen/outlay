@@ -69,6 +69,8 @@ const chainSnapshot: ChainSnapshot = {
   },
   blockHeight: 276884000,
   blockHash: "test-block-hash",
+  nonceConsumed: false,
+  intentConsumed: false,
 };
 
 describe("Outlay API handler", () => {
@@ -165,6 +167,46 @@ describe("Outlay API handler", () => {
     });
     expect(second.status).toBe(409);
     expect(await second.json()).toMatchObject({ error: "IDEMPOTENCY_KEY_REUSED" });
+  });
+
+  it("denies a nonce already consumed on the contract", async () => {
+    chain = { async getAgentSnapshot() { return { ...chainSnapshot, nonceConsumed: true }; } };
+    handler = createApiHandler({
+      store, chain, contractId: "outlay-deployer.testnet", adminToken: "a".repeat(48),
+      nowNs: () => "1794205682689443397",
+      nowDate: () => new Date("2026-11-09T08:00:00.000Z"),
+    });
+    const response = await request("/v1/intents/preflight", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + apiKey,
+        "content-type": "application/json",
+        "idempotency-key": "api-intent-0011",
+      },
+      body: JSON.stringify({ ...validIntent, intentId: "api-intent-0011" }),
+    });
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({ reasonCode: "NONCE_REPLAY", authorized: false });
+  });
+
+  it("denies an intent ID already consumed on the contract", async () => {
+    chain = { async getAgentSnapshot() { return { ...chainSnapshot, intentConsumed: true }; } };
+    handler = createApiHandler({
+      store, chain, contractId: "outlay-deployer.testnet", adminToken: "a".repeat(48),
+      nowNs: () => "1794205682689443397",
+      nowDate: () => new Date("2026-11-09T08:00:00.000Z"),
+    });
+    const response = await request("/v1/intents/preflight", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + apiKey,
+        "content-type": "application/json",
+        "idempotency-key": "api-intent-0012",
+      },
+      body: JSON.stringify({ ...validIntent, intentId: "api-intent-0012" }),
+    });
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({ reasonCode: "INTENT_REPLAY", authorized: false });
   });
 
   it("rejects an intent that claims another agent identity", async () => {
