@@ -28,7 +28,7 @@ Put a deterministic authorization boundary between autonomous agents and spendin
 - Does not trust UI or service-only checks.
 
 ### 4. Risk evaluator (TypeScript library primitive)
-- Validates signal schema, source provenance, evidence hashes, freshness, and required categories.
+- Validates signal schema, Ed25519 signatures from configured source public keys, evidence hashes, freshness, and required categories.
 - Can return clear, review, or deny. It cannot authorize spending.
 - The evaluator is implemented and tested, but no live external signal provider is connected to the API yet.
 - Future integration must fail closed where a required signal is missing or unavailable.
