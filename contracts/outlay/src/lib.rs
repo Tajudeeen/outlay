@@ -1,3 +1,6 @@
+const MAX_POLICY_ID_BYTES: usize = 128;
+const MAX_ALLOWED_DESTINATIONS: usize = 32;
+
 use near_sdk::{
     env, near, require,
     store::{LookupMap, LookupSet},
@@ -80,8 +83,13 @@ impl Outlay {
         self.assert_owner();
         require!(!policy_id.is_empty(), "POLICY_ID_EMPTY");
         require!(
-            policy_id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.'),
+            policy_id.len() <= MAX_POLICY_ID_BYTES
+                && policy_id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.'),
             "POLICY_ID_INVALID"
+        );
+        require!(
+            policy.allowed_destinations.len() <= MAX_ALLOWED_DESTINATIONS,
+            "TOO_MANY_DESTINATIONS"
         );
         require!(policy.max_per_transaction > 0, "MAX_TX_ZERO");
         require!(policy.max_total >= policy.max_per_transaction, "INVALID_BUDGET");
@@ -576,6 +584,117 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(contract.get_policy_spend("daily".into()), 0);
         assert_eq!(contract.get_decision_count(), 0);
+    }
+
+
+    #[test]
+    #[should_panic(expected = "POLICY_ID_INVALID")]
+    fn policy_id_length_is_bounded() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 30);
+        contract.set_policy("p".repeat(MAX_POLICY_ID_BYTES + 1), Policy {
+            enabled: true,
+            expires_at_ns: 1_000,
+            max_per_transaction: 60,
+            max_total: 100,
+            allowed_destinations: vec![account("merchant.testnet")],
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "TOO_MANY_DESTINATIONS")]
+    fn destination_allowlist_length_is_bounded() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 30);
+        contract.set_policy("large-list".into(), Policy {
+            enabled: true,
+            expires_at_ns: 1_000,
+            max_per_transaction: 60,
+            max_total: 100,
+            allowed_destinations: vec![account("merchant.testnet"); MAX_ALLOWED_DESTINATIONS + 1],
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "DESTINATIONS_EMPTY")]
+    fn empty_destination_allowlist_is_denied() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 30);
+        contract.set_policy("empty-list".into(), Policy {
+            enabled: true,
+            expires_at_ns: 1_000,
+            max_per_transaction: 60,
+            max_total: 100,
+            allowed_destinations: vec![],
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "MAX_TX_ZERO")]
+    fn zero_per_transaction_limit_is_denied() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 30);
+        contract.set_policy("zero-limit".into(), Policy {
+            enabled: true,
+            expires_at_ns: 1_000,
+            max_per_transaction: 0,
+            max_total: 100,
+            allowed_destinations: vec![account("merchant.testnet")],
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "INVALID_BUDGET")]
+    fn total_budget_below_per_transaction_limit_is_denied() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 30);
+        contract.set_policy("bad-budget".into(), Policy {
+            enabled: true,
+            expires_at_ns: 1_000,
+            max_per_transaction: 60,
+            max_total: 59,
+            allowed_destinations: vec![account("merchant.testnet")],
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "POLICY_NOT_FOUND")]
+    fn agent_cannot_be_bound_to_unknown_policy() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 30);
+        contract.register_agent(account("new-agent.testnet"), "missing".into());
+    }
+
+    #[test]
+    #[should_panic(expected = "OWNER_ONLY")]
+    fn non_owner_cannot_register_agent() {
+        let mut contract = setup();
+        context(account("attacker.testnet"), 30);
+        contract.register_agent(account("new-agent.testnet"), "daily".into());
+    }
+
+    #[test]
+    #[should_panic(expected = "OWNER_ONLY")]
+    fn non_owner_cannot_change_agent_status() {
+        let mut contract = setup();
+        context(account("attacker.testnet"), 30);
+        contract.set_agent_enabled(account("agent.testnet"), false);
+    }
+
+    #[test]
+    #[should_panic(expected = "OWNER_ONLY")]
+    fn non_owner_cannot_release_reservation() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        let decision = contract.authorize_spend(
+            "owner-release-check".into(),
+            account("merchant.testnet"),
+            10,
+            1,
+            500,
+        );
+        context(account("attacker.testnet"), 500);
+        contract.release_expired_reservation(decision.decision_id);
     }
 
 }
