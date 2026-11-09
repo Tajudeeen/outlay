@@ -4,6 +4,7 @@ import {
   combineContractAndRisk,
   evaluateRisk,
   riskSignalSigningPayload,
+  type RiskEvaluation,
   type RiskSignal,
   type UnsignedRiskSignal,
 } from "../src/risk.js";
@@ -108,9 +109,9 @@ describe("evaluateRisk", () => {
 });
 
 describe("combineContractAndRisk", () => {
-  const clear = { decision: "clear", reasonCode: "RISK_CLEAR", signalIds: [] } as const;
-  const review = { decision: "review", reasonCode: "RISK_SIGNAL_REVIEW", signalIds: [] } as const;
-  const deny = { decision: "deny", reasonCode: "RISK_SIGNAL_DENY", signalIds: [] } as const;
+  const clear: RiskEvaluation = { decision: "clear", reasonCode: "RISK_CLEAR", signalIds: [] };
+  const review: RiskEvaluation = { decision: "review", reasonCode: "RISK_SIGNAL_REVIEW", signalIds: [] };
+  const deny: RiskEvaluation = { decision: "deny", reasonCode: "RISK_SIGNAL_DENY", signalIds: [] };
 
   it("never lets clear risk evidence override a contract denial", () => {
     expect(combineContractAndRisk(
