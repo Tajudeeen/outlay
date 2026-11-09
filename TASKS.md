@@ -91,10 +91,10 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 ## Latest verified CI snapshot
 
 - Rust contract: 37 tests passed (latest contract workflow [42613038594](https://github.com/Tajudeeen/outlay/actions/runs/42613038594) successful).
-- Policy and risk library: 57 tests passed, including 10 new execution-envelope validation cases.
-- API: 26 tests passed in the last verified run, including PostgreSQL integration tests. Four additional dependency-failure tests have been added and await CI verification.
+- Policy and risk library: 59 tests passed, including 12 execution-envelope validation cases.
+- API: 26 tests passed, including PostgreSQL integration and dependency-failure coverage.
 - Dashboard RPC adapter: 7 tests passed.
-- Combined verified automated test count: 127 passed, 0 failed. Latest combined policy/API/dashboard/container workflow [42626540552](https://github.com/Tajudeeen/outlay/actions/runs/42626540552) passed. This includes PostgreSQL integration and API dependency-failure coverage.
+- Combined verified automated test count: 129 passed, 0 failed. Latest combined policy/API/dashboard/container workflow [42626904403](https://github.com/Tajudeeen/outlay/actions/runs/42626904403) passed. This includes PostgreSQL integration and API dependency-failure coverage.
 - PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
 - API container: non-root image build and runtime `/health` check passed against PostgreSQL in CI.
 - Latest API concurrency workflow: [run 42590845687](https://github.com/Tajudeeen/outlay/actions/runs/42590845687), successful.
