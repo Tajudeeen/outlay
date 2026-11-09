@@ -25,6 +25,8 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] TypeScript strict intent schema, contract-safe identifiers, u64/u128 bounds, and abstract policy-unit semantics.
 - [x] Agent key issuance, digest-only storage interface, and bearer authentication module.
 - [x] PostgreSQL credential store, explicit key rotation/revocation audit, fixed-window rate limiting, and on-chain agent-to-policy resolution.
+- [x] Serialize credential issuance, rotation, and revocation per agent with PostgreSQL transaction-scoped advisory locks.
+- [x] Add a PostgreSQL integration test proving concurrent first-time issuance cannot create two active keys.
 - [x] 24-hour idempotency records, payload mismatch detection, request size limits, and per-agent rate limits.
 - [x] API route tests, block-pinned NEAR reader/replay tests, and PostgreSQL integration tests in CI.
 - [x] Deterministic fail-closed preflight evaluator and unit cases.
@@ -89,8 +91,9 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 
 - Rust contract: 34 tests passed.
 - Policy and risk library: 43 tests passed.
-- API: 25 tests passed, including PostgreSQL integration tests.
+- API: 26 tests passed, including PostgreSQL integration tests.
 - Dashboard RPC adapter: 7 tests passed.
-- Combined automated test count: 109 passed, 0 failed.
+- Combined automated test count: 110 passed, 0 failed.
 - PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
 - API container: non-root image build and runtime `/health` check passed against PostgreSQL in CI.
+- Latest TypeScript workflow, including the concurrent credential issuance integration test: [run 42590845687](https://github.com/Tajudeeen/outlay/actions/runs/42590845687), successful.
