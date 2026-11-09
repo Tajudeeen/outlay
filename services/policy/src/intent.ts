@@ -5,8 +5,12 @@ const identifier = z.string().min(1).max(128).regex(/^[A-Za-z0-9._-]+$/);
 const decimal = z.string().regex(/^(0|[1-9][0-9]*)$/);
 const U64_MAX = 18_446_744_073_709_551_615n;
 const U128_MAX = 340_282_366_920_938_463_463_374_607_431_768_211_455n;
-const decimalU64 = decimal.refine((value) => BigInt(value) <= U64_MAX);
-const decimalU128 = decimal.refine((value) => BigInt(value) <= U128_MAX);
+const within = (value: string, maximum: bigint): boolean => {
+  try { return BigInt(value) <= maximum; }
+  catch { return false; }
+};
+const decimalU64 = decimal.refine((value) => within(value, U64_MAX));
+const decimalU128 = decimal.refine((value) => within(value, U128_MAX));
 
 export const SpendIntentSchema = z.object({
   intentId: identifier,
