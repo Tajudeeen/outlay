@@ -109,6 +109,18 @@ describe("validateExecutionEnvelope", () => {
     })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_NUMERIC_INVALID" });
   });
 
+  it("never treats the abstract policy-unit marker as a transferable asset", () => {
+    expect(validateExecutionEnvelope({
+      ...input, mapping: { ...mapping, assetId: "policy-unit" },
+    })).toMatchObject({ valid: false, reasonCode: "ASSET_MAPPING_INVALID" });
+  });
+
+  it("rejects asset mapping versions outside the contract integer width", () => {
+    expect(validateExecutionEnvelope({
+      ...input, mapping: { ...mapping, mappingVersion: "18446744073709551616" },
+    })).toMatchObject({ valid: false, reasonCode: "ASSET_MAPPING_INVALID" });
+  });
+
   it("rejects extra fields in an asset mapping", () => {
     expect(validateExecutionEnvelope({
       ...input, mapping: { ...mapping, transferCall: "arbitrary" } as AssetMapping,
