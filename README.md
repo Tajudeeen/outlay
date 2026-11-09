@@ -41,3 +41,17 @@ Open the [live read-only testnet dashboard](https://outlay-dashboard.vercel.app)
 ## License
 
 License not yet selected. Do not assume permission to reuse this code until a license is added.
+
+
+## Local development
+
+Requires Node.js 22+ and pnpm 10+.
+
+```sh
+pnpm install
+pnpm build
+pnpm typecheck
+pnpm test
+```
+
+The root commands build the shared policy package before checking or testing dependent services. PostgreSQL integration tests run when `DATABASE_URL` is configured. GitHub Actions runs them against a disposable PostgreSQL service.
