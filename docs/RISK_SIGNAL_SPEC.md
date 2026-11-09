@@ -2,7 +2,7 @@
 
 ## Status
 
-The deterministic evaluator and its tests are implemented. No external risk provider is connected to the API, no provider keys are configured, and no live reputation or anomaly checks are active.
+The deterministic evaluator, contract-first composition guard, and their tests are implemented. No external risk provider is connected to the API, no provider keys are configured, and no live reputation or anomaly checks are active. The composition guard is a shared policy-library primitive and is not yet wired into the API preflight route.
 
 ## Signal contract
 
@@ -49,7 +49,19 @@ The `signature` field is excluded from the signed payload. Do not reserialize th
 - A `deny` disposition denies the request.
 - A `review` disposition returns a review outcome.
 - All required fresh signed signals with `clear` dispositions return `clear`.
-- The evaluator never returns an authorization result and cannot override the NEAR contract.
+- The evaluator never returns an authorization result.
+
+## Contract-first composition
+
+Consumers that combine the contract preflight result with a risk result must use `combineContractAndRisk`:
+
+- A contract denial is returned unchanged, even when all risk signals are clear.
+- A contract denial without a reason code becomes `CONTRACT_POLICY_DENIED`.
+- Risk `review` and `deny` outcomes block an otherwise contract-allowed intent.
+- Only a contract-allowed intent with a clear risk result passes this advisory gate.
+- Passing this gate is still not an authorization. The NEAR contract remains the final authority at transaction submission.
+
+The helper is covered by tests for contract-denial precedence, missing denial reasons, clear outcomes, review, and deny. It is not yet connected to the API route.
 
 ## Provider integration requirements
 
