@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "typescript": "5.8.3",
+    "@types/node": "22.15.30",
     "vitest": "3.2.4"
   }
 }
