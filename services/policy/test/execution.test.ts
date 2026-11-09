@@ -88,10 +88,10 @@ describe("validateExecutionEnvelope", () => {
   it("rejects malformed authorization block evidence", () => {
     expect(validateExecutionEnvelope({
       ...input, authorization: { ...authorization, blockHash: "not-a-hash" },
-    })).toMatchObject({ valid: false, reasonCode: "EXECUTION_ENVELOPE_INVALID" });
+    })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_EVIDENCE_INVALID" });
   });
 
-  it("rejects malformed or unsafe numeric values", () => {
+  it("rejects extra authorization fields and values outside contract integer bounds", () => {\n    expect(validateExecutionEnvelope({\n      ...input, authorization: { ...authorization, unrestricted: true } as VerifiedAuthorization,\n    })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_EVIDENCE_INVALID" });\n    expect(validateExecutionEnvelope({\n      ...input, authorization: { ...authorization, nonce: "18446744073709551616" },\n    })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_EVIDENCE_INVALID" });\n  });\n\n  it("rejects malformed or unsafe numeric values", () => {
     expect(validateExecutionEnvelope({
       ...input, authorization: { ...authorization, amount: "1e2" },
     })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_NUMERIC_INVALID" });
