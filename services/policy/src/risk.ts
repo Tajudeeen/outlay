@@ -56,8 +56,8 @@ export type ContractGate = {
 };
 
 export type CombinedRiskGate =
-  | { allowed: true; authority: "risk_gate"; reasonCode: "RISK_CLEAR" }
-  | { allowed: false; authority: "contract" | "risk_gate"; reasonCode: string };
+  | { allowed: true; reasonCode: "RISK_CLEAR" }
+  | { allowed: false; blockedBy: "contract" | "risk_gate"; reasonCode: string };
 
 /**
  * Combines the advisory risk result with the authoritative contract preflight.
@@ -71,18 +71,18 @@ export function combineContractAndRisk(
   if (!contract.allowed) {
     return {
       allowed: false,
-      authority: "contract",
+      blockedBy: "contract",
       reasonCode: contract.reasonCode ?? "CONTRACT_POLICY_DENIED",
     };
   }
   if (risk.decision !== "clear") {
     return {
       allowed: false,
-      authority: "risk_gate",
+      blockedBy: "risk_gate",
       reasonCode: risk.reasonCode,
     };
   }
-  return { allowed: true, authority: "risk_gate", reasonCode: "RISK_CLEAR" };
+  return { allowed: true, reasonCode: "RISK_CLEAR" };
 }
 
 /**
