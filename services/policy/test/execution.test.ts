@@ -91,7 +91,16 @@ describe("validateExecutionEnvelope", () => {
     })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_EVIDENCE_INVALID" });
   });
 
-  it("rejects extra authorization fields and values outside contract integer bounds", () => {\n    expect(validateExecutionEnvelope({\n      ...input, authorization: { ...authorization, unrestricted: true } as VerifiedAuthorization,\n    })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_EVIDENCE_INVALID" });\n    expect(validateExecutionEnvelope({\n      ...input, authorization: { ...authorization, nonce: "18446744073709551616" },\n    })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_EVIDENCE_INVALID" });\n  });\n\n  it("rejects malformed or unsafe numeric values", () => {
+  it("rejects extra authorization fields and values outside contract integer bounds", () => {
+    expect(validateExecutionEnvelope({
+      ...input, authorization: { ...authorization, unrestricted: true } as VerifiedAuthorization,
+    })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_EVIDENCE_INVALID" });
+    expect(validateExecutionEnvelope({
+      ...input, authorization: { ...authorization, nonce: "18446744073709551616" },
+    })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_EVIDENCE_INVALID" });
+  });
+
+  it("rejects malformed or unsafe numeric values", () => {
     expect(validateExecutionEnvelope({
       ...input, authorization: { ...authorization, amount: "1e2" },
     })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_NUMERIC_INVALID" });
