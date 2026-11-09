@@ -7,6 +7,12 @@ Date: 2026-11-09
 
 The current Outlay intent uses `assetId: policy-unit`. Its amount is an abstract policy budget unit. It MUST NOT be interpreted as NEAR, yoctoNEAR, fungible-token units, or any real asset amount. As a result, the current intent cannot directly produce a transfer payload. No conversion, rounding, decimal scaling, or default asset may be inferred.
 
+## Current implementation boundary
+
+The current TypeScript helper in `services/policy/src/execution.ts` validates envelope shape, integer bounds, explicit asset conversion, expiry/release flags, and a deterministic hash. It does not fetch NEAR state, prove that the supplied authorization fields came from the contract, verify a finalized block, or prove that the policy and agent remain enabled. The `VerifiedAuthorization` input is a typed data structure, not a cryptographic capability.
+
+Treat this helper as a pure validation component only. It must not be connected directly to a signer. A trusted adapter must independently fetch the decision, policy, agent grant, reservation state, and replay state at one finalized block, verify every field against the requested intent, and then construct the trusted input. That adapter and its adversarial tests are still outstanding.
+
 ## Proposed envelope
 
 The signer adapter should accept a typed envelope assembled by trusted Outlay code, not an agent-supplied transaction:
