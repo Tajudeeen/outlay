@@ -23,7 +23,7 @@ type ApiDependencies = {
   nowDate?: () => Date;
 };
 
-function json(status: number, body: unknown): Response {
+function json(status: number, body: unknown, extraHeaders: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -31,6 +31,7 @@ function json(status: number, body: unknown): Response {
       "cache-control": "no-store",
       "x-content-type-options": "nosniff",
       "referrer-policy": "no-referrer",
+      ...extraHeaders,
     },
   });
 }
@@ -171,7 +172,12 @@ export function createApiHandler(deps: ApiDependencies): (request: Request) => P
       const windowStart = Math.floor(now.getTime() / 60_000);
       try {
         const allowed = await deps.store.consumeRateLimit(identity.agentId, windowStart, rateLimit);
-        if (!allowed) return json(429, { error: "RATE_LIMITED", retryAfterSeconds: 60 - Math.floor((now.getTime() % 60_000) / 1000) });
+        if (!allowed) {
+          const retryAfter = 60 - Math.floor((now.getTime() % 60_000) / 1000);
+          return json(429, { error: "RATE_LIMITED", retryAfterSeconds: retryAfter }, {
+            "retry-after": String(retryAfter),
+          });
+        }
       } catch {
         return json(503, { error: "RATE_LIMIT_STORE_UNAVAILABLE" });
       }
