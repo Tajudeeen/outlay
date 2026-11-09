@@ -129,6 +129,137 @@ describe("Outlay API handler", () => {
     });
   });
 
+  it("adds a trusted risk denial without granting authorization", async () => {
+    handler = createApiHandler({
+      store, chain, contractId: "outlay-deployer.testnet", adminToken: "a".repeat(48),
+      nowNs: () => "1794205682689443397",
+      nowDate: () => new Date("2026-11-09T08:00:00.000Z"),
+      riskEvaluator: async () => ({
+        decision: "deny", reasonCode: "RISK_SIGNAL_DENY", signalIds: ["risk-001"],
+      }),
+    });
+    const response = await request("/v1/intents/preflight", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + apiKey,
+        "content-type": "application/json",
+        "idempotency-key": "risk-deny-0001",
+      },
+      body: JSON.stringify({ ...validIntent, intentId: "risk-deny-intent" }),
+    });
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      allowed: false,
+      authorized: false,
+      reasonCode: "RISK_SIGNAL_DENY",
+      risk: { status: "deny", reasonCode: "RISK_SIGNAL_DENY" },
+    });
+  });
+
+  it("allows a clear trusted risk result while keeping preflight advisory", async () => {
+    handler = createApiHandler({
+      store, chain, contractId: "outlay-deployer.testnet", adminToken: "a".repeat(48),
+      nowNs: () => "1794205682689443397",
+      nowDate: () => new Date("2026-11-09T08:00:00.000Z"),
+      riskEvaluator: async () => ({
+        decision: "clear", reasonCode: "RISK_CLEAR", signalIds: ["risk-002"],
+      }),
+    });
+    const response = await request("/v1/intents/preflight", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + apiKey,
+        "content-type": "application/json",
+        "idempotency-key": "risk-clear-0001",
+      },
+      body: JSON.stringify({ ...validIntent, intentId: "risk-clear-intent" }),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      allowed: true,
+      authorized: false,
+      risk: { status: "clear", reasonCode: "RISK_CLEAR" },
+    });
+  });
+
+  it("does not call risk evaluator or override an on-chain replay denial", async () => {
+    let riskCalls = 0;
+    chain = { async getAgentSnapshot() { return { ...chainSnapshot, nonceConsumed: true }; } };
+    handler = createApiHandler({
+      store, chain, contractId: "outlay-deployer.testnet", adminToken: "a".repeat(48),
+      nowNs: () => "1794205682689443397",
+      nowDate: () => new Date("2026-11-09T08:00:00.000Z"),
+      riskEvaluator: async () => {
+        riskCalls += 1;
+        return { decision: "clear", reasonCode: "RISK_CLEAR", signalIds: ["risk-003"] };
+      },
+    });
+    const response = await request("/v1/intents/preflight", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + apiKey,
+        "content-type": "application/json",
+        "idempotency-key": "risk-contract-0001",
+      },
+      body: JSON.stringify({ ...validIntent, intentId: "risk-contract-intent" }),
+    });
+    expect(response.status).toBe(422);
+    expect(riskCalls).toBe(0);
+    expect(await response.json()).toMatchObject({
+      allowed: false,
+      reasonCode: "NONCE_REPLAY",
+      risk: { status: "skipped_contract_denial" },
+    });
+  });
+
+  it("fails closed when required risk provider is missing", async () => {
+    handler = createApiHandler({
+      store, chain, contractId: "outlay-deployer.testnet", adminToken: "a".repeat(48),
+      requireRisk: true,
+      nowNs: () => "1794205682689443397",
+      nowDate: () => new Date("2026-11-09T08:00:00.000Z"),
+    });
+    const response = await request("/v1/intents/preflight", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + apiKey,
+        "content-type": "application/json",
+        "idempotency-key": "risk-missing-0001",
+      },
+      body: JSON.stringify({ ...validIntent, intentId: "risk-missing-intent" }),
+    });
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      allowed: false,
+      reasonCode: "RISK_PROVIDER_UNAVAILABLE",
+      risk: { status: "unavailable" },
+    });
+  });
+
+  it("fails closed when a configured risk provider throws", async () => {
+    handler = createApiHandler({
+      store, chain, contractId: "outlay-deployer.testnet", adminToken: "a".repeat(48),
+      nowNs: () => "1794205682689443397",
+      nowDate: () => new Date("2026-11-09T08:00:00.000Z"),
+      riskEvaluator: async () => { throw new Error("provider timeout"); },
+    });
+    const response = await request("/v1/intents/preflight", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + apiKey,
+        "content-type": "application/json",
+        "idempotency-key": "risk-error-0001",
+      },
+      body: JSON.stringify({ ...validIntent, intentId: "risk-error-intent" }),
+    });
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      allowed: false,
+      reasonCode: "RISK_PROVIDER_UNAVAILABLE",
+      risk: { status: "unavailable" },
+    });
+  });
+
   it("replays the same idempotent response without another chain read", async () => {
     let reads = 0;
     chain = { async getAgentSnapshot() { reads += 1; return chainSnapshot; } };
