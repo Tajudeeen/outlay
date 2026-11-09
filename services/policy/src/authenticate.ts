@@ -24,7 +24,7 @@ export async function authenticateAgent(
   if (!match) return null;
 
   const secret = match[1];
-  if (!secret?.startsWith("outlay_agent_")) return null;
+  if (!secret || !/^outlay_agent_[A-Za-z0-9_-]{43}$/.test(secret)) return null;
 
   const keyHash = hashAgentKey(secret);
   let credential: AgentCredentialRecord | null;
