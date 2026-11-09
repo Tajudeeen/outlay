@@ -75,3 +75,12 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - Testnet flow independently verified.
 - Claims match evidence.
 - External review before production funds.
+
+## Current release blockers
+
+- [ ] Upgrade the existing `outlay-deployer.testnet` contract with the latest successful CI WASM artifact. Use a code-only upgrade, never call `new` again.
+- [ ] From the development PC, run `scripts/testnet-smoke.ps1 -Execute` after reviewing its expected baseline and confirm the new replay-state views.
+- [ ] Provision managed PostgreSQL and production secrets, then deploy the API container.
+- [ ] Verify API health, issue an agent API key, and run one preflight request against the upgraded testnet contract.
+- [ ] Connect a trusted live risk provider before claiming risk signals are active.
+- [ ] Keep signing, token transfer, and settlement out of scope until reservation lifecycle and signer payload validation are reviewed.
