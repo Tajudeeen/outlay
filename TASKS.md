@@ -39,9 +39,9 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Add replay, substitution, and derivation-path tests.
 
 ## Milestone 4: risk engine
-- [ ] Define risk signal schema, freshness, and provenance.
-- [ ] Add deterministic risk rules and escalation outcomes.
-- [ ] Test stale/missing/contradictory signals.
+- [x] Define strict risk signal schema, source provenance, evidence hash, and freshness window.
+- [x] Add deterministic risk rules with clear, review, and deny outcomes.
+- [x] Test stale, missing, future-dated, duplicate, contradictory, and untrusted signals.
 - [ ] Ensure risk service cannot override contract denial.
 
 ## Milestone 5: adversarial harness
