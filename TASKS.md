@@ -18,8 +18,8 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Implement atomic budget reservation accounting.
 - [x] Add nonce/replay protection and intent/policy expiry.
 - [x] Emit structured authorization and reservation-release events.
-- [ ] Expand contract tests for authorization, ownership, replay, and reservation lifecycle.
-- [ ] Contract tests for unauthorized and adversarial calls.
+- [x] Add 15 contract unit tests covering authorization, ownership, replay, budget limits, and reservation lifecycle.
+- [x] Cover unauthorized callers, invalid identifiers, replay, and expiry denial paths in contract tests.
 
 ## Milestone 2: intent API and policy service
 - [x] TypeScript strict intent schema and decimal-string boundaries.
