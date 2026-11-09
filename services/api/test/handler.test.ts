@@ -302,6 +302,24 @@ describe("Outlay API handler", () => {
     expect(await response.json()).toMatchObject({ error: "CHAIN_SNAPSHOT_UNAVAILABLE", authorized: false });
   });
 
+  it("refuses to issue keys for an agent with an inactive policy", async () => {
+    chain = { async getAgentSnapshot() {
+      return { ...chainSnapshot, policy: { ...chainSnapshot.policy!, enabled: false } };
+    } };
+    handler = createApiHandler({
+      store, chain, contractId: "outlay-deployer.testnet", adminToken: "a".repeat(48),
+      nowNs: () => "1794205682689443397",
+      nowDate: () => new Date("2026-11-09T08:00:00.000Z"),
+    });
+    const response = await request("/v1/admin/agent-keys", {
+      method: "POST",
+      headers: { "x-outlay-admin-token": "a".repeat(48), "content-type": "application/json" },
+      body: JSON.stringify({ agentId: "outlay-agent.testnet" }),
+    });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ error: "AGENT_POLICY_NOT_ACTIVE_ON_CHAIN" });
+  });
+
   it("rejects admin key issuance without the admin token", async () => {
     const response = await request("/v1/admin/agent-keys", {
       method: "POST",
