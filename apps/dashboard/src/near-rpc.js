@@ -59,7 +59,7 @@ export function decodeNearResult(resultBytes) {
   return parseNearJson(decoded);
 }
 
-export async function callView(contractId, methodName, args = {}, fetchImpl = globalThis.fetch) {
+export async function callView(contractId, methodName, args = {}, fetchImpl = globalThis.fetch, blockHash = null) {
   if (typeof fetchImpl !== "function") throw new Error("fetch is unavailable");
   const response = await fetchImpl(TESTNET_RPC, {
     method: "POST",
@@ -70,7 +70,7 @@ export async function callView(contractId, methodName, args = {}, fetchImpl = gl
       method: "query",
       params: {
         request_type: "call_function",
-        finality: "final",
+        ...(blockHash ? { block_id: blockHash } : { finality: "final" }),
         account_id: contractId,
         method_name: methodName,
         args_base64: encodeJsonArgs(args),
