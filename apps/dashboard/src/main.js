@@ -52,6 +52,7 @@ async function refresh() {
       callView(contractId, "get_policy_spend", { policy_id: policyId }, globalThis.fetch, countResult.blockHash),
       callView(contractId, "get_agent_grant", { agent_id: agentId }, globalThis.fetch, countResult.blockHash),
       callView(contractId, "get_decision", { decision_id: decisionId }, globalThis.fetch, countResult.blockHash),
+      callView(contractId, "is_reservation_released", { decision_id: decisionId }, globalThis.fetch, countResult.blockHash),
     ]);
 
     if (results.some((result) =>
@@ -60,7 +61,7 @@ async function refresh() {
       throw new Error("NEAR RPC returned inconsistent finalized block data");
     }
 
-    const [policyResult, versionResult, spendResult, grantResult, decisionResult] = results;
+    const [policyResult, versionResult, spendResult, grantResult, decisionResult, reservationResult] = results;
     const policy = policyResult.value;
     const grant = grantResult.value;
     const decision = decisionResult.value;
@@ -107,6 +108,8 @@ async function refresh() {
     setText("receipt-version", decision?.policy_version ?? "--");
     setText("receipt-cumulative", decision ? formatUnits(decision.cumulative_spend) : "--");
     setText("receipt-nonce", decision?.nonce ?? "--");
+    if (typeof reservationResult.value !== "boolean") throw new Error("contract returned an invalid reservation status");
+    setText("reservation-state", decision ? (reservationResult.value ? "released" : "reserved") : "--");
     pretty("decision-json", decision);
 
     const verification = verifyDecisionReceipt(decision, {
