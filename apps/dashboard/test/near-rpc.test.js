@@ -64,9 +64,9 @@ test("verifies receipt fields without claiming cryptographic proof", () => {
     policyId: "daily",
     currentPolicyVersion: "2",
   };
-  expect(verifyDecisionReceipt(decision, expected).valid).toBe(true);
-  expect(verifyDecisionReceipt({ ...decision, amount: "0" }, expected).valid).toBe(false);
-  expect(verifyDecisionReceipt({ ...decision, agent_id: "attacker.testnet" }, expected).valid).toBe(false);
+  assert.equal(verifyDecisionReceipt(decision, expected).valid, true);
+  assert.equal(verifyDecisionReceipt({ ...decision, amount: "0" }, expected).valid, false);
+  assert.equal(verifyDecisionReceipt({ ...decision, agent_id: "attacker.testnet" }, expected).valid, false);
 });
 
 test("rejects malformed expiry and future policy version in receipt checks", () => {
@@ -79,5 +79,5 @@ test("rejects malformed expiry and future policy version in receipt checks", () 
   const result = verifyDecisionReceipt(decision, {
     decisionId: "outlay:100:1", agentId: "agent.testnet", policyId: "daily", currentPolicyVersion: "2",
   });
-  expect(result.valid).toBe(false);
+  assert.equal(result.valid, false);
 });
