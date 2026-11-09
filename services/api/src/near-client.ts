@@ -57,6 +57,17 @@ export class NearRpcReader implements NearReader {
       this.callView(contractId, "get_policy_spend", { policy_id: grant.policy_id }, grantResult.blockHash),
     ]);
 
+    if (
+      policyResult.blockHash !== grantResult.blockHash
+      || versionResult.blockHash !== grantResult.blockHash
+      || spendResult.blockHash !== grantResult.blockHash
+      || policyResult.blockHeight !== grantResult.blockHeight
+      || versionResult.blockHeight !== grantResult.blockHeight
+      || spendResult.blockHeight !== grantResult.blockHeight
+    ) {
+      throw new Error("INCONSISTENT_NEAR_SNAPSHOT");
+    }
+
     const rawPolicy = policyResult.value as {
       enabled?: unknown;
       expires_at_ns?: unknown;
