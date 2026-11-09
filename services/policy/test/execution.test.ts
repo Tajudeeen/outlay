@@ -102,7 +102,7 @@ describe("validateExecutionEnvelope", () => {
 
   it("rejects extra fields in an asset mapping", () => {
     expect(validateExecutionEnvelope({
-      ...input, mapping: { ...mapping, transferCall: "arbitrary" },
+      ...input, mapping: { ...mapping, transferCall: "arbitrary" } as AssetMapping,
     })).toMatchObject({ valid: false, reasonCode: "ASSET_MAPPING_INVALID" });
   });
 });
