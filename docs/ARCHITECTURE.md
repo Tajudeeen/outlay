@@ -14,7 +14,7 @@ Put a deterministic authorization boundary between autonomous agents and spendin
 ### 2. API and intent normalization
 - Authenticates the caller using a digest-only credential record.
 - Validates strict intent schema, JSON size, identity binding, and idempotency key.
-- Reads the agent grant and policy snapshot from one pinned finalized NEAR block.
+- Reads the agent grant, policy snapshot, and consumed nonce/intent status from one pinned finalized NEAR block.
 - Applies fixed-window request limits and deterministic advisory preflight.
 - Persists key lifecycle audit events and idempotent responses in PostgreSQL.
 - Produces a canonical intent representation.
