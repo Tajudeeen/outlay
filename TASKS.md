@@ -36,6 +36,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Document signing threat model and trust boundaries (design only, signer remains disabled).
 - [x] Specify constrained execution envelope, asset-denomination boundary, and payload validation requirements (pre-implementation spec).
 - [x] Build a strict pre-sign envelope validator with bounded integer schemas, explicit rational asset mapping, exact conversion, expiry/release checks, and deterministic envelope hash. This does not sign or broadcast.
+- [ ] Build a trusted authorization-evidence adapter that reads the decision, policy, agent grant, reservation state, and replay state at one finalized block, then constructs the envelope. The current pure validator does not authenticate its `VerifiedAuthorization` input.
 - [ ] Ensure contract/trusted code constructs signing payloads, never agent-supplied transaction objects.
 - [ ] Integrate NEAR Chain Signatures only after security review and validator tests.
 - [ ] Verify testnet signing and execution with transaction evidence.
