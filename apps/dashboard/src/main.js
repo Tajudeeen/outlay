@@ -1,4 +1,4 @@
-import { callView } from "./near-rpc.js";
+import { callView, verifyDecisionReceipt } from "./near-rpc.js";
 
 const byId = (id) => document.getElementById(id);
 const setText = (id, value) => { byId(id).textContent = value ?? "--"; };
@@ -104,6 +104,29 @@ async function refresh() {
     setText("receipt-cumulative", decision ? formatUnits(decision.cumulative_spend) : "--");
     setText("receipt-nonce", decision?.nonce ?? "--");
     pretty("decision-json", decision);
+
+    const verification = verifyDecisionReceipt(decision, {
+      decisionId,
+      agentId,
+      policyId,
+      currentPolicyVersion: String(versionResult.value ?? "0"),
+    });
+    setBadge("verification-badge", verification.valid ? "consistent" : "mismatch", verification.valid ? "good" : "bad");
+    setText("verification-summary", verification.valid
+      ? "all receipt consistency checks passed"
+      : "one or more receipt fields failed consistency checks");
+    const verificationList = byId("verification-checks");
+    verificationList.replaceChildren();
+    for (const check of verification.checks) {
+      const item = document.createElement("li");
+      item.className = check.passed ? "check-pass" : "check-fail";
+      const label = document.createElement("span");
+      label.textContent = check.label;
+      const result = document.createElement("strong");
+      result.textContent = check.passed ? "pass" : "fail";
+      item.append(label, result);
+      verificationList.append(item);
+    }
 
     setText("connection-state", "connected · finalized");
     setText("last-updated", highestBlock ? "block #" + highestBlock : "finalized state");
