@@ -44,7 +44,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Define strict risk signal schema, Ed25519 source signatures, evidence hash, and freshness window.
 - [x] Add deterministic risk rules with clear, review, and deny outcomes.
 - [x] Test stale, missing, future-dated, duplicate, contradictory, and untrusted signals.
-- [ ] Ensure risk service cannot override contract denial.
+- [x] Add a tested contract-first risk composition guard. It preserves contract denials and lets risk add review/deny holds. The API route is not yet wired to live risk signals.
 
 ## Milestone 5: adversarial harness
 - [ ] Budget race and overspend attempts.
@@ -90,10 +90,11 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 ## Latest verified CI snapshot
 
 - Rust contract: 34 tests passed.
-- Policy and risk library: 43 tests passed.
+- Policy and risk library: 47 tests passed.
 - API: 26 tests passed, including PostgreSQL integration tests.
 - Dashboard RPC adapter: 7 tests passed.
-- Combined automated test count: 110 passed, 0 failed.
+- Combined automated test count: 114 passed, 0 failed.
 - PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
 - API container: non-root image build and runtime `/health` check passed against PostgreSQL in CI.
-- Latest TypeScript workflow, including the concurrent credential issuance integration test: [run 42590845687](https://github.com/Tajudeeen/outlay/actions/runs/42590845687), successful.
+- Latest API concurrency workflow: [run 42590845687](https://github.com/Tajudeeen/outlay/actions/runs/42590845687), successful.
+- Latest risk-gate workflow, including typecheck, policy/API tests, PostgreSQL integration, container build, and runtime health: [run 42591355622](https://github.com/Tajudeeen/outlay/actions/runs/42591355622), successful.
