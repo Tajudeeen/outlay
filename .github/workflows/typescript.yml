@@ -13,6 +13,7 @@ on:
       - "package.json"
       - "pnpm-workspace.yaml"
       - "services/**"
+      - "apps/**"
       - ".github/workflows/typescript.yml"
 
 jobs:
