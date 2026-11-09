@@ -114,6 +114,23 @@ if ($knownNonceConsumed -ne "true" -or $knownIntentConsumed -ne "true" -or $unus
 Write-Host "Replay views confirmed: known nonce and intent consumed, unused values clear." -ForegroundColor Green
 
 
+# Replay the already-consumed intent with a fresh nonce, then replay a consumed nonce with a fresh intent ID.
+Invoke-NearTransaction "authorize_spend" @{
+  intent_id = "smoke-intent-001"
+  destination = $AgentAccount
+  amount = 1
+  nonce = 17
+  intent_expires_at_ns = [long]1900000000000000000
+} $AgentAccount $true "intent replay"
+
+Invoke-NearTransaction "authorize_spend" @{
+  intent_id = "smoke-nonce-replay-001"
+  destination = $AgentAccount
+  amount = 1
+  nonce = 1
+  intent_expires_at_ns = [long]1900000000000000000
+} $AgentAccount $true "nonce replay"
+
 # The only additional successful spend. It raises the reservation total from 25 to 75.
 Invoke-NearTransaction "authorize_spend" @{
   intent_id = "smoke-budget-fill-002"
