@@ -64,3 +64,20 @@ jobs:
         run: pnpm --filter @outlay/dashboard test
       - name: Build API container image
         run: docker build -t outlay-api:ci .
+      - name: Boot API container and verify health
+        run: |
+          docker run -d --name outlay-api-ci --network host \
+            -e DATABASE_URL=postgresql://outlay:outlay_ci_password@127.0.0.1:5432/outlay_test \
+            -e PGSSL=disable \
+            -e OUTLAY_ADMIN_TOKEN=ci-only-admin-token-0123456789abcdef0123456789abcdef \
+            -e PORT=8787 outlay-api:ci
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8787/health; then
+              docker rm -f outlay-api-ci
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs outlay-api-ci
+          docker rm -f outlay-api-ci
+          exit 1
