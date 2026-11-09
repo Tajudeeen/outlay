@@ -55,8 +55,8 @@ export function evaluatePreflight(
   const maxTotal = parseUint(policy.maxTotal, "policy.maxTotal");
   const reserved = parseUint(policy.reserved, "policy.reserved");
 
-  if (intentCreated > now) return { allowed: false, reasonCode: "INTENT_FROM_FUTURE" };
   if (intentCreated >= intentExpiry) return { allowed: false, reasonCode: "INVALID_INTENT_WINDOW" };
+  if (intentCreated > now) return { allowed: false, reasonCode: "INTENT_FROM_FUTURE" };
   if (now >= intentExpiry) return { allowed: false, reasonCode: "INTENT_EXPIRED" };
   if (now >= policyExpiry) return { allowed: false, reasonCode: "POLICY_EXPIRED" };
   if (intentExpiry > policyExpiry) return { allowed: false, reasonCode: "INTENT_OUTLIVES_POLICY" };
