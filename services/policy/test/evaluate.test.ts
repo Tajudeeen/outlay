@@ -22,7 +22,7 @@ const policy: PolicySnapshot = {
   expiresAtNs: "1000",
   maxPerTransaction: "60",
   maxTotal: "100",
-  spent: "20",
+  reserved: "20",
   allowedDestinations: ["merchant.testnet"],
 };
 
@@ -47,7 +47,7 @@ describe("evaluatePreflight", () => {
   });
 
   it("denies total budget overflow", () => {
-    expect(evaluatePreflight(intent, agent, { ...policy, spent: "70" }, "200")).toEqual({
+    expect(evaluatePreflight(intent, agent, { ...policy, reserved: "70" }, "200")).toEqual({
       allowed: false, reasonCode: "BUDGET_EXCEEDED",
     });
   });
@@ -60,7 +60,7 @@ describe("evaluatePreflight", () => {
 
   it("uses bigint math for values above JavaScript safe integer", () => {
     const huge = parseSpendIntent({ ...intent, amount: "9007199254740993" });
-    const hugePolicy = { ...policy, maxPerTransaction: "9007199254740993", maxTotal: "9007199254740993", spent: "0" };
+    const hugePolicy = { ...policy, maxPerTransaction: "9007199254740993", maxTotal: "9007199254740993", reserved: "0" };
     expect(evaluatePreflight(huge, agent, hugePolicy, "200")).toMatchObject({
       allowed: true, remainingBudget: "0",
     });
