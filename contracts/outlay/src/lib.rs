@@ -187,8 +187,8 @@ impl Outlay {
 
         // NEP-297-style event: this records authorization only, not execution.
         env::log_str(&format!(
-            "EVENT_JSON:{{\"standard\":\"outlay\",\"version\":\"1.0.0\",\"event\":\"spend_authorized\",\"data\":[{{\"decision_id\":\"{}\",\"agent_id\":\"{}\",\"policy_id\":\"{}\",\"destination\":\"{}\",\"amount\":\"{}\",\"nonce\":\"{}\",\"authorized_at_ns\":\"{}\",\"cumulative_spend\":\"{}\"}}]}}",
-            decision_id, agent_id, decision.policy_id, decision.destination, amount, nonce, now, next_spend
+            "EVENT_JSON:{{\"standard\":\"outlay\",\"version\":\"1.0.0\",\"event\":\"spend_authorized\",\"data\":[{{\"decision_id\":\"{}\",\"agent_id\":\"{}\",\"policy_id\":\"{}\",\"intent_id\":\"{}\",\"destination\":\"{}\",\"amount\":\"{}\",\"nonce\":\"{}\",\"authorized_at_ns\":\"{}\",\"cumulative_spend\":\"{}\"}}]}}",
+            decision_id, agent_id, decision.policy_id, intent_id, decision.destination, amount, nonce, now, next_spend
         ));
         decision
     }
