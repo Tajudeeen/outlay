@@ -47,7 +47,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Add a tested contract-first risk composition guard. It preserves contract denials and lets risk add review/deny holds. The API route is not yet wired to live risk signals.
 
 ## Milestone 5: adversarial harness
-- [ ] Budget race and overspend attempts.
+- [x] Add contract adversarial cases for competing agents on one policy, exact budget exhaustion, and u128 overflow. Unit tests model serialized state transitions, not simultaneous live transactions.
 - [x] Nonce and intent replay attacks in contract unit tests and testnet evidence.
 - [x] Read-only consumed nonce/intent views for advisory preflight, with contract checks remaining authoritative.
 - [x] Expired-intent and policy-expiry denial paths in contract unit tests.
@@ -57,7 +57,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Signer payload confusion.
 - [x] Rejected authorization leaves budget and decision count unchanged in contract unit tests.
 - [x] Malformed policy snapshots fail closed in policy-service tests.
-- [ ] External dependency failure injection.
+- [x] Add API failure-injection tests for credential lookup, idempotency reads/writes, and rate-limit storage. CI verification is pending.
 
 ## Milestone 6: dashboard and evidence
 - [x] Read-only testnet views for policy, agent grant, and decision receipt (RPC adapter CI and public browser check pass).
@@ -89,12 +89,13 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 
 ## Latest verified CI snapshot
 
-- Rust contract: 34 tests passed.
+- Rust contract: 37 tests passed (latest contract workflow [42613038594](https://github.com/Tajudeeen/outlay/actions/runs/42613038594) successful).
 - Policy and risk library: 47 tests passed.
-- API: 26 tests passed, including PostgreSQL integration tests.
+- API: 26 tests passed in the last verified run, including PostgreSQL integration tests. Four additional dependency-failure tests have been added and await CI verification.
 - Dashboard RPC adapter: 7 tests passed.
-- Combined automated test count: 114 passed, 0 failed.
+- Combined verified automated test count: 117 passed, 0 failed. This excludes the four newly added API failure-injection tests until their workflow passes.
 - PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
 - API container: non-root image build and runtime `/health` check passed against PostgreSQL in CI.
 - Latest API concurrency workflow: [run 42590845687](https://github.com/Tajudeeen/outlay/actions/runs/42590845687), successful.
+- Adversarial coverage and limitations documented in [docs/ADVERSARIAL_TEST_PLAN.md](docs/ADVERSARIAL_TEST_PLAN.md).
 - Latest risk-gate workflow, including typecheck, policy/API tests, PostgreSQL integration, container build, and runtime health: [run 42591355622](https://github.com/Tajudeeen/outlay/actions/runs/42591355622), successful.
