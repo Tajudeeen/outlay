@@ -9,21 +9,36 @@ import { z } from "zod";
 const accountId = z.string().min(2).max(64).regex(/^[a-z0-9._-]+$/);
 const identifier = z.string().min(1).max(128).regex(/^[A-Za-z0-9._-]+$/);
 const decimal = z.string().regex(/^(0|[1-9][0-9]*)$/);
-const positiveDecimal = decimal.refine((v) => BigInt(v) > 0n);
 const U64_MAX = 18_446_744_073_709_551_615n;
 const U128_MAX = 340_282_366_920_938_463_463_374_607_431_768_211_455n;
-const u64 = decimal.refine((v) => BigInt(v) <= U64_MAX);
-const u128 = decimal.refine((v) => BigInt(v) <= U128_MAX);
+function parseDecimal(value: string): bigint | null {
+  if (!/^(0|[1-9][0-9]*)$/.test(value)) return null;
+  try { return BigInt(value); } catch { return null; }
+}
+const positiveDecimal = decimal.refine((v) => {
+  const parsed = parseDecimal(v);
+  return parsed !== null && parsed > 0n;
+});
+const u64 = decimal.refine((v) => {
+  const parsed = parseDecimal(v);
+  return parsed !== null && parsed <= U64_MAX;
+});
+const u128 = decimal.refine((v) => {
+  const parsed = parseDecimal(v);
+  return parsed !== null && parsed <= U128_MAX;
+});
+const positiveU64 = u64.refine((v) => BigInt(v) > 0n);
+const positiveU128 = u128.refine((v) => BigInt(v) > 0n);
 const hash = z.string().regex(/^[0-9a-f]{64}$/);
 
 export const AssetMappingSchema = z.object({
   assetId: identifier,
   network: z.literal("near-testnet"),
   decimals: z.number().int().min(0).max(24),
-  baseUnitsNumerator: u128,
-  baseUnitsDenominator: u128,
-  maxTransferBaseUnits: u128,
-  mappingVersion: u64,
+  baseUnitsNumerator: positiveU128,
+  baseUnitsDenominator: positiveU128,
+  maxTransferBaseUnits: positiveU128,
+  mappingVersion: positiveU64,
 }).strict();
 
 export type AssetMapping = z.infer<typeof AssetMappingSchema>;
@@ -35,7 +50,7 @@ export const ExecutionEnvelopeSchema = z.object({
   decisionId: identifier,
   intentId: identifier,
   policyId: identifier,
-  policyVersion: u64,
+  policyVersion: positiveU64,
   agentId: accountId,
   nonce: u64,
   recipient: accountId,
@@ -46,7 +61,7 @@ export const ExecutionEnvelopeSchema = z.object({
   mappingVersion: positiveDecimal,
   authorizationBlockHeight: u64,
   authorizationBlockHash: hash,
-  expiresAtNs: u64,
+  expiresAtNs: positiveU64,
   executionAttemptId: identifier,
 }).strict();
 
@@ -104,7 +119,7 @@ export function validateExecutionEnvelope(input: {
   if (!auth.active) return fail("AUTHORIZATION_INACTIVE");
   if (auth.released) return fail("RESERVATION_RELEASED");
 
-  let now: bigint;
+  const parsedNow = u64.safeParse(input.nowNs);\n  if (!parsedNow.success) return fail("AUTHORIZATION_NUMERIC_INVALID");\n\n  let now: bigint;
   let expiry: bigint;
   let policyAmount: bigint;
   let numerator: bigint;
