@@ -1,0 +1,29 @@
+name: contract
+
+on:
+  push:
+    paths:
+      - "Cargo.toml"
+      - "contracts/**"
+      - ".github/workflows/contract.yml"
+  pull_request:
+    paths:
+      - "Cargo.toml"
+      - "contracts/**"
+      - ".github/workflows/contract.yml"
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Unit tests
+        run: cargo test --workspace
+      - name: Build contract wasm
+        run: cargo build -p outlay-contract --target wasm32-unknown-unknown --release
