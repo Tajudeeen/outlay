@@ -9,7 +9,7 @@ export function parseNearJson(source: string): unknown {
   let index = 0;
 
   while (index < source.length) {
-    const character = source[index];
+    const character = source[index] ?? "";
     if (inString) {
       normalized += character;
       if (escaped) escaped = false;
