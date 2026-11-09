@@ -102,6 +102,17 @@ if ($startingSpend -ne "25" -or $startingCount -ne "1" -or $startingVersion -ne 
 }
 
 Write-Host "Baseline confirmed: reserved=25, decisions=1, version=1." -ForegroundColor Green
+$knownNonceConsumed = Invoke-NearRead "is_nonce_consumed" @{ agent_id = $AgentAccount; nonce = "1" }
+$knownIntentConsumed = Invoke-NearRead "is_intent_consumed" @{ agent_id = $AgentAccount; intent_id = "smoke-intent-001" }
+$unusedNonceConsumed = Invoke-NearRead "is_nonce_consumed" @{ agent_id = $AgentAccount; nonce = "999" }
+$unusedIntentConsumed = Invoke-NearRead "is_intent_consumed" @{ agent_id = $AgentAccount; intent_id = "smoke-intent-unused" }
+
+if ($knownNonceConsumed -ne "true" -or $knownIntentConsumed -ne "true" -or $unusedNonceConsumed -ne "false" -or $unusedIntentConsumed -ne "false") {
+  throw "Replay-state views are unavailable or inconsistent. Upgrade the contract and verify its read-only replay methods before running the live suite."
+}
+
+Write-Host "Replay views confirmed: known nonce and intent consumed, unused values clear." -ForegroundColor Green
+
 
 # The only additional successful spend. It raises the reservation total from 25 to 75.
 Invoke-NearTransaction "authorize_spend" @{
