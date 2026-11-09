@@ -1,6 +1,12 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { evaluateRisk, riskSignalSigningPayload, type RiskSignal, type UnsignedRiskSignal } from "../src/risk.js";
+import {
+  combineContractAndRisk,
+  evaluateRisk,
+  riskSignalSigningPayload,
+  type RiskSignal,
+  type UnsignedRiskSignal,
+} from "../src/risk.js";
 
 const source = "risk-provider-v1";
 const now = "1000000000";
@@ -98,5 +104,51 @@ describe("evaluateRisk", () => {
       .toMatchObject({ decision: "deny", reasonCode: "INVALID_RISK_SIGNAL" });
     expect(evaluateRisk([signal()], ["velocity"], trustedSources, "not-a-time", "5000000"))
       .toMatchObject({ decision: "deny", reasonCode: "INVALID_RISK_CLOCK" });
+  });
+});
+
+describe("combineContractAndRisk", () => {
+  const clear = { decision: "clear", reasonCode: "RISK_CLEAR", signalIds: [] } as const;
+  const review = { decision: "review", reasonCode: "RISK_SIGNAL_REVIEW", signalIds: [] } as const;
+  const deny = { decision: "deny", reasonCode: "RISK_SIGNAL_DENY", signalIds: [] } as const;
+
+  it("never lets clear risk evidence override a contract denial", () => {
+    expect(combineContractAndRisk(
+      { allowed: false, reasonCode: "DESTINATION_DENIED" },
+      clear,
+    )).toEqual({
+      allowed: false,
+      authority: "contract",
+      reasonCode: "DESTINATION_DENIED",
+    });
+  });
+
+  it("fails closed when contract denies without a reason code", () => {
+    expect(combineContractAndRisk({ allowed: false }, clear)).toEqual({
+      allowed: false,
+      authority: "contract",
+      reasonCode: "CONTRACT_POLICY_DENIED",
+    });
+  });
+
+  it("allows only a contract-allowed intent with a clear risk result through the advisory gate", () => {
+    expect(combineContractAndRisk({ allowed: true }, clear)).toEqual({
+      allowed: true,
+      authority: "risk_gate",
+      reasonCode: "RISK_CLEAR",
+    });
+  });
+
+  it("keeps review and deny outcomes blocked when the contract preflight allows", () => {
+    expect(combineContractAndRisk({ allowed: true }, review)).toEqual({
+      allowed: false,
+      authority: "risk_gate",
+      reasonCode: "RISK_SIGNAL_REVIEW",
+    });
+    expect(combineContractAndRisk({ allowed: true }, deny)).toEqual({
+      allowed: false,
+      authority: "risk_gate",
+      reasonCode: "RISK_SIGNAL_DENY",
+    });
   });
 });
