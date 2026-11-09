@@ -152,7 +152,7 @@ describe("Outlay API handler", () => {
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
     expect(reads).toBe(1);
-    expect(store.limits.get("outlay-agent.testnet:29469600")).toBe(1);
+    expect(store.limits.get("outlay-agent.testnet:29903520")).toBe(1);
   });
 
   it("rejects idempotency-key reuse with a different payload", async () => {
