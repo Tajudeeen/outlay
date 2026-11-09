@@ -84,3 +84,13 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Verify API health, issue an agent API key, and run one preflight request against the upgraded testnet contract.
 - [ ] Connect a trusted live risk provider before claiming risk signals are active.
 - [ ] Keep signing, token transfer, and settlement out of scope until reservation lifecycle and signer payload validation are reviewed.
+
+## Latest verified CI snapshot
+
+- Rust contract: 34 tests passed.
+- Policy and risk library: 43 tests passed.
+- API: 24 tests passed, including PostgreSQL integration tests.
+- Dashboard RPC adapter: 7 tests passed.
+- Combined automated test count: 108 passed, 0 failed.
+- PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
+- API container: image build and runtime `/health` check passed against PostgreSQL in CI.
