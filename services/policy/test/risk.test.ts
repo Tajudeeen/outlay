@@ -119,7 +119,7 @@ describe("combineContractAndRisk", () => {
       clear,
     )).toEqual({
       allowed: false,
-      authority: "contract",
+      blockedBy: "contract",
       reasonCode: "DESTINATION_DENIED",
     });
   });
@@ -127,7 +127,7 @@ describe("combineContractAndRisk", () => {
   it("fails closed when contract denies without a reason code", () => {
     expect(combineContractAndRisk({ allowed: false }, clear)).toEqual({
       allowed: false,
-      authority: "contract",
+      blockedBy: "contract",
       reasonCode: "CONTRACT_POLICY_DENIED",
     });
   });
@@ -135,7 +135,6 @@ describe("combineContractAndRisk", () => {
   it("allows only a contract-allowed intent with a clear risk result through the advisory gate", () => {
     expect(combineContractAndRisk({ allowed: true }, clear)).toEqual({
       allowed: true,
-      authority: "risk_gate",
       reasonCode: "RISK_CLEAR",
     });
   });
@@ -143,12 +142,12 @@ describe("combineContractAndRisk", () => {
   it("keeps review and deny outcomes blocked when the contract preflight allows", () => {
     expect(combineContractAndRisk({ allowed: true }, review)).toEqual({
       allowed: false,
-      authority: "risk_gate",
+      blockedBy: "risk_gate",
       reasonCode: "RISK_SIGNAL_REVIEW",
     });
     expect(combineContractAndRisk({ allowed: true }, deny)).toEqual({
       allowed: false,
-      authority: "risk_gate",
+      blockedBy: "risk_gate",
       reasonCode: "RISK_SIGNAL_DENY",
     });
   });
