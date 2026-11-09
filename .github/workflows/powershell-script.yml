@@ -1,0 +1,23 @@
+name: powershell-script
+
+on:
+  push:
+    paths:
+      - "scripts/**"
+      - ".github/workflows/powershell-script.yml"
+  pull_request:
+    paths:
+      - "scripts/**"
+      - ".github/workflows/powershell-script.yml"
+
+jobs:
+  parse-smoke-script:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse PowerShell smoke runner
+        shell: pwsh
+        run: |
+          $source = Get-Content "scripts/testnet-smoke.ps1" -Raw
+          [void][scriptblock]::Create($source)
+          Write-Host "PowerShell smoke runner syntax is valid."
