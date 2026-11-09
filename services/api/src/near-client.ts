@@ -51,9 +51,9 @@ export class NearRpcReader implements NearReader {
     }
 
     const [policyResult, versionResult, spendResult] = await Promise.all([
-      this.callView(contractId, "get_policy", { policy_id: grant.policy_id }),
-      this.callView(contractId, "get_policy_version", { policy_id: grant.policy_id }),
-      this.callView(contractId, "get_policy_spend", { policy_id: grant.policy_id }),
+      this.callView(contractId, "get_policy", { policy_id: grant.policy_id }, grantResult.blockHash),
+      this.callView(contractId, "get_policy_version", { policy_id: grant.policy_id }, grantResult.blockHash),
+      this.callView(contractId, "get_policy_spend", { policy_id: grant.policy_id }, grantResult.blockHash),
     ]);
 
     const rawPolicy = policyResult.value as {
@@ -88,12 +88,7 @@ export class NearRpcReader implements NearReader {
     return {
       agent: { agentId, enabled: grant.enabled, policyId: grant.policy_id },
       policy,
-      blockHeight: Math.min(
-        grantResult.blockHeight,
-        policyResult.blockHeight,
-        versionResult.blockHeight,
-        spendResult.blockHeight,
-      ),
+      blockHeight: grantResult.blockHeight,
       blockHash: grantResult.blockHash,
     };
   }
@@ -102,6 +97,7 @@ export class NearRpcReader implements NearReader {
     contractId: string,
     methodName: string,
     args: Record<string, string>,
+    blockHash?: string,
   ): Promise<{ value: unknown; blockHeight: number; blockHash: string }> {
     const bytes = new TextEncoder().encode(JSON.stringify(args));
     let binary = "";
@@ -116,7 +112,7 @@ export class NearRpcReader implements NearReader {
         method: "query",
         params: {
           request_type: "call_function",
-          finality: "final",
+          ...(blockHash ? { block_id: blockHash } : { finality: "final" }),
           account_id: contractId,
           method_name: methodName,
           args_base64: btoa(binary),
