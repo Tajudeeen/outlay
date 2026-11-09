@@ -42,6 +42,9 @@ function secureEqual(left: string, right: string): boolean {
 }
 
 async function readJson(request: Request): Promise<unknown> {
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    throw new Error("JSON_CONTENT_TYPE_REQUIRED");
+  }
   const declared = Number(request.headers.get("content-length") ?? "0");
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) throw new Error("BODY_TOO_LARGE");
   const text = await request.text();
