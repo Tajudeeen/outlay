@@ -5,3 +5,10 @@ resolver = "2"
 [workspace.package]
 edition = "2021"
 license = "UNLICENSED"
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+panic = "abort"
+overflow-checks = true
