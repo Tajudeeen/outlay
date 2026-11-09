@@ -102,3 +102,31 @@ test("pins follow-up view calls to the selected finalized block hash", async () 
   assert.equal(requestedBody.params.block_id, "pinned-block-hash");
   assert.equal("finality" in requestedBody.params, false);
 });
+
+
+test("reads reservation release state from a pinned finalized block", async () => {
+  let requestedBody;
+  const fetchImpl = async (_url, options) => {
+    requestedBody = JSON.parse(options.body);
+    return new Response(JSON.stringify({
+      jsonrpc: "2.0",
+      id: "outlay-dashboard",
+      result: {
+        result: Array.from(new TextEncoder().encode("true")),
+        logs: [],
+        block_height: 123,
+        block_hash: "pinned-block-hash",
+      },
+    }), { status: 200 });
+  };
+  const result = await callView(
+    "outlay-deployer.testnet",
+    "is_reservation_released",
+    { decision_id: "outlay:123:1" },
+    fetchImpl,
+    "pinned-block-hash",
+  );
+  assert.equal(result.value, true);
+  assert.equal(requestedBody.params.method_name, "is_reservation_released");
+  assert.equal(requestedBody.params.block_id, "pinned-block-hash");
+});
