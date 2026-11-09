@@ -279,6 +279,17 @@ impl Outlay {
         self.grants.get(&agent_id).cloned()
     }
 
+    /// Read-only replay checks for advisory API preflight. Contract authorization
+    /// still performs the authoritative checks atomically during submission.
+    pub fn is_nonce_consumed(&self, agent_id: AccountId, nonce: String) -> bool {
+        let parsed_nonce = nonce.parse::<u64>().expect("INVALID_NONCE");
+        self.consumed_nonces.contains(&format!("{}:{}", agent_id, parsed_nonce))
+    }
+
+    pub fn is_intent_consumed(&self, agent_id: AccountId, intent_id: String) -> bool {
+        self.consumed_intents.contains(&format!("{}:{}", agent_id, intent_id))
+    }
+
     pub fn get_policy_spend(&self, policy_id: String) -> u128 {
         self.spend_by_policy.get(&policy_id).copied().unwrap_or(0)
     }
@@ -586,6 +597,30 @@ mod tests {
         assert_eq!(contract.get_decision_count(), 0);
     }
 
+
+    #[test]
+    fn exposes_consumed_nonce_and_intent_for_read_only_preflight() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 100);
+        contract.authorize_spend(
+            "view-replay-check".into(),
+            account("merchant.testnet"),
+            10,
+            77,
+            500,
+        );
+        assert!(contract.is_nonce_consumed(account("agent.testnet"), "77".into()));
+        assert!(contract.is_intent_consumed(account("agent.testnet"), "view-replay-check".into()));
+        assert!(!contract.is_nonce_consumed(account("agent.testnet"), "78".into()));
+        assert!(!contract.is_intent_consumed(account("agent.testnet"), "unused".into()));
+    }
+
+    #[test]
+    #[should_panic(expected = "INVALID_NONCE")]
+    fn nonce_view_rejects_non_decimal_input() {
+        let contract = setup();
+        contract.is_nonce_consumed(account("agent.testnet"), "1e3".into());
+    }
 
     #[test]
     #[should_panic(expected = "POLICY_ID_INVALID")]
