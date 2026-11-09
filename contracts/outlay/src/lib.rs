@@ -32,6 +32,7 @@ pub struct SpendDecision {
     pub nonce: u64,
     pub authorized_at_ns: u64,
     pub policy_expires_at_ns: u64,
+    pub intent_expires_at_ns: u64,
     pub cumulative_spend: u128,
 }
 
@@ -47,6 +48,8 @@ pub struct Outlay {
     grants: LookupMap<AccountId, AgentGrant>,
     spend_by_policy: LookupMap<String, u128>,
     consumed_nonces: LookupSet<String>,
+    decisions: LookupMap<String, SpendDecision>,
+    released_reservations: LookupSet<String>,
     decision_count: u64,
 }
 
@@ -60,6 +63,8 @@ impl Outlay {
             grants: LookupMap::new(b"g"),
             spend_by_policy: LookupMap::new(b"s"),
             consumed_nonces: LookupSet::new(b"n"),
+            decisions: LookupMap::new(b"d"),
+            released_reservations: LookupSet::new(b"r"),
             decision_count: 0,
         }
     }
@@ -165,8 +170,11 @@ impl Outlay {
             nonce,
             authorized_at_ns: now,
             policy_expires_at_ns: policy.expires_at_ns,
+            intent_expires_at_ns,
             cumulative_spend: next_spend,
         };
+
+        self.decisions.insert(decision_id.clone(), decision.clone());
 
         // NEP-297-style event: this records authorization only, not execution.
         env::log_str(&format!(
@@ -174,6 +182,48 @@ impl Outlay {
             decision_id, agent_id, decision.policy_id, decision.destination, amount, nonce, now, next_spend
         ));
         decision
+    }
+
+    /// Releases an authorization reservation only after its intent expiry.
+    /// This is owner-triggered reconciliation, not proof that execution failed.
+    pub fn release_expired_reservation(&mut self, decision_id: String) {
+        self.assert_owner();
+        let now = env::block_timestamp();
+        let decision = self
+            .decisions
+            .get(&decision_id)
+            .cloned()
+            .expect("DECISION_NOT_FOUND");
+        require!(now >= decision.intent_expires_at_ns, "RESERVATION_NOT_EXPIRED");
+        require!(
+            !self.released_reservations.contains(&decision_id),
+            "RESERVATION_ALREADY_RELEASED"
+        );
+
+        let reserved = self
+            .spend_by_policy
+            .get(&decision.policy_id)
+            .copied()
+            .unwrap_or(0);
+        let remaining = reserved
+            .checked_sub(decision.amount)
+            .expect("RESERVATION_ACCOUNTING_ERROR");
+        self.spend_by_policy
+            .insert(decision.policy_id.clone(), remaining);
+        self.released_reservations.insert(decision_id.clone());
+
+        env::log_str(&format!(
+            "EVENT_JSON:{{\"standard\":\"outlay\",\"version\":\"1.0.0\",\"event\":\"reservation_released\",\"data\":[{{\"decision_id\":\"{}\",\"amount\":\"{}\",\"released_at_ns\":\"{}\"}}]}}",
+            decision_id, decision.amount, now
+        ));
+    }
+
+    pub fn get_decision(&self, decision_id: String) -> Option<SpendDecision> {
+        self.decisions.get(&decision_id).cloned()
+    }
+
+    pub fn is_reservation_released(&self, decision_id: String) -> bool {
+        self.released_reservations.contains(&decision_id)
     }
 
     pub fn get_policy(&self, policy_id: String) -> Option<Policy> {
@@ -315,5 +365,39 @@ mod tests {
             max_total: 100,
             allowed_destinations: vec![account("merchant.testnet")],
         });
+    }
+
+    #[test]
+    fn expired_reservation_can_be_released_once_by_owner() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        let decision = contract.authorize_spend(account("merchant.testnet"), 40, 9, 500);
+        assert_eq!(contract.get_policy_spend("daily".into()), 40);
+
+        context(account("owner.testnet"), 500);
+        contract.release_expired_reservation(decision.decision_id.clone());
+        assert_eq!(contract.get_policy_spend("daily".into()), 0);
+        assert!(contract.is_reservation_released(decision.decision_id));
+    }
+
+    #[test]
+    #[should_panic(expected = "RESERVATION_NOT_EXPIRED")]
+    fn reservation_cannot_be_released_before_expiry() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        let decision = contract.authorize_spend(account("merchant.testnet"), 40, 9, 500);
+        context(account("owner.testnet"), 499);
+        contract.release_expired_reservation(decision.decision_id);
+    }
+
+    #[test]
+    #[should_panic(expected = "RESERVATION_ALREADY_RELEASED")]
+    fn reservation_cannot_be_released_twice() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        let decision = contract.authorize_spend(account("merchant.testnet"), 40, 9, 500);
+        context(account("owner.testnet"), 500);
+        contract.release_expired_reservation(decision.decision_id.clone());
+        contract.release_expired_reservation(decision.decision_id);
     }
 }
