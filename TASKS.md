@@ -33,10 +33,11 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Credential-store lookup failures reject authentication, and malformed numeric policy snapshots deny preflight.
 
 ## Milestone 3: signing/execution boundary
-- [ ] Document signing threat model and supported transaction shapes.
-- [ ] Build a strict payload validator.
-- [ ] Ensure contract/trusted code constructs signing payloads.
-- [ ] Integrate NEAR Chain Signatures only after security review.
+- [x] Document signing threat model and trust boundaries (design only, signer remains disabled).
+- [x] Specify constrained execution envelope, asset-denomination boundary, and payload validation requirements (pre-implementation spec).
+- [ ] Build a strict payload validator from `docs/EXECUTION_PAYLOAD_SPEC.md` after asset mapping is approved.
+- [ ] Ensure contract/trusted code constructs signing payloads, never agent-supplied transaction objects.
+- [ ] Integrate NEAR Chain Signatures only after security review and validator tests.
 - [ ] Verify testnet signing and execution with transaction evidence.
 - [ ] Add replay, substitution, and derivation-path tests.
 
