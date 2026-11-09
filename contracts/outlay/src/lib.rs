@@ -26,6 +26,7 @@ pub struct AgentGrant {
 pub struct SpendDecision {
     pub decision_id: String,
     pub intent_id: String,
+    pub policy_version: u64,
     pub agent_id: AccountId,
     pub policy_id: String,
     pub destination: AccountId,
@@ -46,6 +47,7 @@ pub struct SpendDecision {
 pub struct Outlay {
     owner: AccountId,
     policies: LookupMap<String, Policy>,
+    policy_versions: LookupMap<String, u64>,
     grants: LookupMap<AccountId, AgentGrant>,
     spend_by_policy: LookupMap<String, u128>,
     consumed_nonces: LookupSet<String>,
@@ -62,6 +64,7 @@ impl Outlay {
         Self {
             owner: env::predecessor_account_id(),
             policies: LookupMap::new(b"p"),
+            policy_versions: LookupMap::new(b"v"),
             grants: LookupMap::new(b"g"),
             spend_by_policy: LookupMap::new(b"s"),
             consumed_nonces: LookupSet::new(b"n"),
@@ -83,6 +86,14 @@ impl Outlay {
         require!(policy.max_per_transaction > 0, "MAX_TX_ZERO");
         require!(policy.max_total >= policy.max_per_transaction, "INVALID_BUDGET");
         require!(!policy.allowed_destinations.is_empty(), "DESTINATIONS_EMPTY");
+        let next_version = self
+            .policy_versions
+            .get(&policy_id)
+            .copied()
+            .unwrap_or(0)
+            .checked_add(1)
+            .expect("POLICY_VERSION_OVERFLOW");
+        self.policy_versions.insert(policy_id.clone(), next_version);
         self.policies.insert(policy_id, policy);
     }
 
@@ -148,6 +159,12 @@ impl Outlay {
         require!(amount <= policy.max_per_transaction, "TX_LIMIT_EXCEEDED");
         require!(policy.allowed_destinations.iter().any(|d| d == &destination), "DESTINATION_DENIED");
 
+        let policy_version = self
+            .policy_versions
+            .get(&grant.policy_id)
+            .copied()
+            .expect("POLICY_VERSION_NOT_FOUND");
+
         let nonce_key = format!("{}:{}", agent_id, nonce);
         require!(!self.consumed_nonces.contains(&nonce_key), "NONCE_REPLAY");
         let intent_key = format!("{}:{}", agent_id, intent_id);
@@ -176,6 +193,7 @@ impl Outlay {
         let decision = SpendDecision {
             decision_id: decision_id.clone(),
             intent_id: intent_id.clone(),
+            policy_version,
             agent_id: agent_id.clone(),
             policy_id: grant.policy_id,
             destination,
@@ -191,8 +209,8 @@ impl Outlay {
 
         // NEP-297-style event: this records authorization only, not execution.
         env::log_str(&format!(
-            "EVENT_JSON:{{\"standard\":\"outlay\",\"version\":\"1.0.0\",\"event\":\"spend_authorized\",\"data\":[{{\"decision_id\":\"{}\",\"agent_id\":\"{}\",\"policy_id\":\"{}\",\"intent_id\":\"{}\",\"destination\":\"{}\",\"amount\":\"{}\",\"nonce\":\"{}\",\"authorized_at_ns\":\"{}\",\"cumulative_spend\":\"{}\"}}]}}",
-            decision_id, agent_id, decision.policy_id, intent_id, decision.destination, amount, nonce, now, next_spend
+            "EVENT_JSON:{{\"standard\":\"outlay\",\"version\":\"1.0.0\",\"event\":\"spend_authorized\",\"data\":[{{\"decision_id\":\"{}\",\"agent_id\":\"{}\",\"policy_id\":\"{}\",\"intent_id\":\"{}\",\"policy_version\":\"{}\",\"destination\":\"{}\",\"amount\":\"{}\",\"nonce\":\"{}\",\"authorized_at_ns\":\"{}\",\"cumulative_spend\":\"{}\"}}]}}",
+            decision_id, agent_id, decision.policy_id, intent_id, policy_version, decision.destination, amount, nonce, now, next_spend
         ));
         decision
     }
@@ -237,6 +255,10 @@ impl Outlay {
 
     pub fn is_reservation_released(&self, decision_id: String) -> bool {
         self.released_reservations.contains(&decision_id)
+    }
+
+    pub fn get_policy_version(&self, policy_id: String) -> u64 {
+        self.policy_versions.get(&policy_id).copied().unwrap_or(0)
     }
 
     pub fn get_policy(&self, policy_id: String) -> Option<Policy> {
@@ -288,6 +310,31 @@ mod tests {
         });
         contract.register_agent(account("agent.testnet"), "daily".into());
         contract
+    }
+
+    #[test]
+    fn policy_updates_increment_version_without_resetting_reservations() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        let first = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 30, 1, 500);
+        assert_eq!(first.policy_version, 1);
+        assert_eq!(contract.get_policy_spend("daily".into()), 30);
+
+        context(account("owner.testnet"), 25);
+        contract.set_policy("daily".into(), Policy {
+            enabled: true,
+            expires_at_ns: 1_000,
+            max_per_transaction: 50,
+            max_total: 100,
+            allowed_destinations: vec![account("merchant.testnet")],
+        });
+        assert_eq!(contract.get_policy_version("daily".into()), 2);
+        assert_eq!(contract.get_policy_spend("daily".into()), 30);
+
+        context(account("agent.testnet"), 30);
+        let second = contract.authorize_spend("intent-2".into(), account("merchant.testnet"), 20, 2, 500);
+        assert_eq!(second.policy_version, 2);
+        assert_eq!(contract.get_policy_spend("daily".into()), 50);
     }
 
     #[test]
