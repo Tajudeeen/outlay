@@ -732,4 +732,94 @@ mod tests {
         contract.release_expired_reservation(decision.decision_id);
     }
 
+
+    #[test]
+    fn two_agents_cannot_race_shared_policy_budget_past_limit() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 15);
+        contract.register_agent(account("agent-two.testnet"), "daily".into());
+
+        context(account("agent.testnet"), 20);
+        let first = contract.authorize_spend(
+            "race-agent-one".into(),
+            account("merchant.testnet"),
+            60,
+            1,
+            500,
+        );
+        assert_eq!(first.cumulative_spend, 60);
+
+        context(account("agent-two.testnet"), 21);
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            contract.authorize_spend(
+                "race-agent-two".into(),
+                account("merchant.testnet"),
+                60,
+                1,
+                500,
+            );
+        }));
+        assert!(result.is_err());
+        assert_eq!(contract.get_policy_spend("daily".into()), 60);
+        assert_eq!(contract.get_decision_count(), 1);
+        assert!(!contract.is_intent_consumed(account("agent-two.testnet"), "race-agent-two".into()));
+        assert!(!contract.is_nonce_consumed(account("agent-two.testnet"), "1".into()));
+    }
+
+    #[test]
+    fn competing_intents_can_fill_budget_exactly_but_not_exceed_it() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        contract.authorize_spend("race-40".into(), account("merchant.testnet"), 40, 1, 500);
+        contract.authorize_spend("race-60".into(), account("merchant.testnet"), 60, 2, 500);
+        assert_eq!(contract.get_policy_spend("daily".into()), 100);
+        assert_eq!(contract.get_decision_count(), 2);
+
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            contract.authorize_spend("race-extra".into(), account("merchant.testnet"), 1, 3, 500);
+        }));
+        assert!(result.is_err());
+        assert_eq!(contract.get_policy_spend("daily".into()), 100);
+        assert_eq!(contract.get_decision_count(), 2);
+    }
+
+    #[test]
+    fn checked_spend_overflow_fails_without_mutating_state() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 15);
+        contract.set_policy("daily".into(), Policy {
+            enabled: true,
+            expires_at_ns: u64::MAX,
+            max_per_transaction: u128::MAX,
+            max_total: u128::MAX,
+            allowed_destinations: vec![account("merchant.testnet")],
+        });
+
+        context(account("agent.testnet"), 20);
+        contract.authorize_spend(
+            "max-u128".into(),
+            account("merchant.testnet"),
+            u128::MAX,
+            1,
+            u64::MAX - 1,
+        );
+        assert_eq!(contract.get_policy_spend("daily".into()), u128::MAX);
+        assert_eq!(contract.get_decision_count(), 1);
+
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            contract.authorize_spend(
+                "overflow-u128".into(),
+                account("merchant.testnet"),
+                1,
+                2,
+                u64::MAX - 1,
+            );
+        }));
+        assert!(result.is_err());
+        assert_eq!(contract.get_policy_spend("daily".into()), u128::MAX);
+        assert_eq!(contract.get_decision_count(), 1);
+        assert!(!contract.is_nonce_consumed(account("agent.testnet"), "2".into()));
+        assert!(!contract.is_intent_consumed(account("agent.testnet"), "overflow-u128".into()));
+    }
+
 }
