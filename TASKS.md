@@ -35,7 +35,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 ## Milestone 3: signing/execution boundary
 - [x] Document signing threat model and trust boundaries (design only, signer remains disabled).
 - [x] Specify constrained execution envelope, asset-denomination boundary, and payload validation requirements (pre-implementation spec).
-- [ ] Build a strict payload validator from `docs/EXECUTION_PAYLOAD_SPEC.md` after asset mapping is approved.
+- [x] Build a strict pre-sign envelope validator with bounded integer schemas, explicit rational asset mapping, exact conversion, expiry/release checks, and deterministic envelope hash. This does not sign or broadcast.
 - [ ] Ensure contract/trusted code constructs signing payloads, never agent-supplied transaction objects.
 - [ ] Integrate NEAR Chain Signatures only after security review and validator tests.
 - [ ] Verify testnet signing and execution with transaction evidence.
@@ -67,7 +67,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Policy and agent management views.
 - [ ] Intent/decision timeline.
 - [x] Finalized contract receipt consistency checks in the dashboard, clearly labeled as non-cryptographic.
-- [ ] Clear labels for simulated, testnet, and verified execution.
+- [x] Label on-chain authorization, unimplemented execution, unclaimed settlement, and unavailable execution verification separately.
 - [x] Two-minute demo runbook with real testnet transaction evidence.
 - [ ] Record and review the end-to-end demo video.
 
@@ -91,10 +91,10 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 ## Latest verified CI snapshot
 
 - Rust contract: 37 tests passed (latest contract workflow [42613038594](https://github.com/Tajudeeen/outlay/actions/runs/42613038594) successful).
-- Policy and risk library: 47 tests passed.
+- Policy and risk library: 57 tests passed, including 10 new execution-envelope validation cases.
 - API: 26 tests passed in the last verified run, including PostgreSQL integration tests. Four additional dependency-failure tests have been added and await CI verification.
 - Dashboard RPC adapter: 7 tests passed.
-- Combined verified automated test count: 117 passed, 0 failed. This excludes the four newly added API failure-injection tests until their workflow passes.
+- Combined verified automated test count: 127 passed, 0 failed. Latest combined policy/API/dashboard/container workflow [42626540552](https://github.com/Tajudeeen/outlay/actions/runs/42626540552) passed. This includes PostgreSQL integration and API dependency-failure coverage.
 - PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
 - API container: non-root image build and runtime `/health` check passed against PostgreSQL in CI.
 - Latest API concurrency workflow: [run 42590845687](https://github.com/Tajudeeen/outlay/actions/runs/42590845687), successful.
