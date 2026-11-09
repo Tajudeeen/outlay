@@ -24,9 +24,9 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 ## Milestone 2: intent API and policy service
 - [x] TypeScript strict intent schema and decimal-string boundaries.
 - [x] Agent key issuance, digest-only storage interface, and bearer authentication module.
-- [ ] Persistent credential store, key revocation/rotation, rate limiting, and agent-to-policy mapping.
-- [ ] Idempotency and request limits.
-- [ ] API integration tests against contract behavior.
+- [x] PostgreSQL credential store, explicit key rotation/revocation audit, fixed-window rate limiting, and on-chain agent-to-policy resolution.
+- [x] 24-hour idempotency records, payload mismatch detection, request size limits, and per-agent rate limits.
+- [x] API route tests, block-pinned NEAR reader tests, and PostgreSQL integration tests in CI.
 - [x] Deterministic fail-closed preflight evaluator and unit cases.
 - [x] Credential-store lookup failures reject authentication, and malformed numeric policy snapshots deny preflight.
 
@@ -62,7 +62,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Read-only on-chain decision receipt display.
 - [ ] Policy and agent management views.
 - [ ] Intent/decision timeline.
-- [ ] Receipt verification display.
+- [x] Finalized contract receipt consistency checks in the dashboard, clearly labeled as non-cryptographic.
 - [ ] Clear labels for simulated, testnet, and verified execution.
 - [x] Two-minute demo runbook with real testnet transaction evidence.
 - [ ] Record and review the end-to-end demo video.
