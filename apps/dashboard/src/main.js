@@ -134,6 +134,7 @@ async function refresh() {
 
     setText("connection-state", "connected · finalized");
     setText("last-updated", countResult.blockHeight ? "block #" + countResult.blockHeight : "finalized state");
+    setText("snapshot-hash", "block hash: " + countResult.blockHash);
   } catch (error) {
     setText("connection-state", "rpc unavailable");
     errorPanel.hidden = false;
