@@ -11,7 +11,7 @@ The API is implemented as a Node.js 22 service with:
 - 24-hour idempotency response storage.
 - No wallet key access, signing, transaction broadcast, or asset transfer.
 
-The service is not deployed yet. A production database and secret values must be supplied by the operator.
+The service is not deployed yet. A production database and secret values must be supplied by the operator. Upgrade the existing testnet contract first so the nonce and intent replay view methods are available to API preflight.
 
 ## Required secrets and settings
 
