@@ -1,0 +1,45 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { callView, decodeNearResult, encodeJsonArgs, parseNearJson, TESTNET_RPC } from "../src/near-rpc.js";
+
+test("encodes JSON arguments as UTF-8 base64", () => {
+  assert.equal(encodeJsonArgs({ policy_id: "smoke-test" }), "eyJwb2xpY3lfaWQiOiJzbW9rZS10ZXN0In0=");
+  assert.equal(encodeJsonArgs({}), "e30=");
+});
+
+test("preserves large integer tokens exactly", () => {
+  const parsed = parseNearJson('{"amount":340282366920938463463374607431768211455,"label":"amount 25","nonce":7}');
+  assert.equal(parsed.amount, "340282366920938463463374607431768211455");
+  assert.equal(parsed.nonce, "7");
+  assert.equal(parsed.label, "amount 25");
+});
+
+test("decodes NEAR view return bytes", () => {
+  const bytes = Array.from(new TextEncoder().encode('{"enabled":true,"max_total":100}'));
+  assert.deepEqual(decodeNearResult(bytes), { enabled: true, max_total: "100" });
+  assert.equal(decodeNearResult([]), null);
+});
+
+test("calls a finalized read-only NEAR contract method", async () => {
+  let requestedUrl;
+  let requestedBody;
+  const fetchImpl = async (url, options) => {
+    requestedUrl = url;
+    requestedBody = JSON.parse(options.body);
+    const bytes = Array.from(new TextEncoder().encode("1"));
+    return new Response(JSON.stringify({
+      jsonrpc: "2.0",
+      id: "outlay-dashboard",
+      result: { result: bytes, logs: [], block_height: 123, block_hash: "block-hash" },
+    }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+
+  const result = await callView("outlay-deployer.testnet", "get_decision_count", {}, fetchImpl);
+  assert.equal(requestedUrl, TESTNET_RPC);
+  assert.equal(requestedBody.params.request_type, "call_function");
+  assert.equal(requestedBody.params.finality, "final");
+  assert.equal(requestedBody.params.account_id, "outlay-deployer.testnet");
+  assert.equal(requestedBody.params.method_name, "get_decision_count");
+  assert.equal(result.value, "1");
+  assert.equal(result.blockHeight, 123);
+});
