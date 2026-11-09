@@ -1,126 +1,113 @@
-import { callView } from "./near-rpc.js";
+export const TESTNET_RPC = "https://rpc.testnet.fastnear.com";
 
-const byId = (id) => document.getElementById(id);
-const setText = (id, value) => { byId(id).textContent = value ?? "--"; };
-const pretty = (id, value) => { byId(id).textContent = JSON.stringify(value, null, 2); };
-
-function formatUnits(value) {
-  if (value === null || value === undefined) return "--";
-  try { return BigInt(value).toLocaleString() + " units"; }
-  catch { return String(value) + " units"; }
+export function encodeJsonArgs(args = {}) {
+  const bytes = new TextEncoder().encode(JSON.stringify(args));
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
 }
 
-function setBadge(id, label, tone = "") {
-  const node = byId(id);
-  node.textContent = label;
-  node.className = "badge" + (tone ? " " + tone : "");
-}
+/**
+ * Preserve u64/u128 JSON integer tokens as strings. Parsing them as Number
+ * would silently round values above Number.MAX_SAFE_INTEGER.
+ */
+export function parseNearJson(source) {
+  let normalized = "";
+  let inString = false;
+  let escaped = false;
+  let index = 0;
 
-function formatTimestamp(value) {
-  if (!value) return "--";
-  try {
-    const milliseconds = Number(BigInt(value) / 1_000_000n);
-    return new Date(milliseconds).toLocaleString();
-  } catch { return String(value); }
-}
+  while (index < source.length) {
+    const character = source[index];
 
-async function refresh() {
-  const button = byId("refresh-button");
-  const contractId = byId("contract-id").value.trim();
-  const policyId = byId("policy-id").value.trim();
-  const agentId = byId("agent-id").value.trim();
-  const decisionId = byId("decision-id").value.trim();
-  const errorPanel = byId("error-panel");
-
-  if (!contractId || !policyId || !agentId || !decisionId) {
-    errorPanel.hidden = false;
-    setText("error-message", "Fill in the contract, policy, agent, and decision identifiers.");
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = "querying finalized state…";
-  errorPanel.hidden = true;
-  setText("connection-state", "querying testnet");
-
-  try {
-    const results = await Promise.all([
-      callView(contractId, "get_decision_count"),
-      callView(contractId, "get_policy", { policy_id: policyId }),
-      callView(contractId, "get_policy_version", { policy_id: policyId }),
-      callView(contractId, "get_policy_spend", { policy_id: policyId }),
-      callView(contractId, "get_agent_grant", { agent_id: agentId }),
-      callView(contractId, "get_decision", { decision_id: decisionId }),
-    ]);
-
-    const [countResult, policyResult, versionResult, spendResult, grantResult, decisionResult] = results;
-    const policy = policyResult.value;
-    const grant = grantResult.value;
-    const decision = decisionResult.value;
-    const blockHeights = results.map((result) => result.blockHeight).filter(Boolean);
-    const highestBlock = blockHeights.length ? Math.max(...blockHeights) : null;
-
-    setText("decision-count", countResult.value ?? "0");
-    setText("reserved-budget", formatUnits(spendResult.value ?? "0"));
-    setText("policy-version", versionResult.value ?? "0");
-    setText("agent-state", grant ? (grant.enabled ? "enabled" : "disabled") : "unregistered");
-    setText("agent-policy", grant ? "bound to " + grant.policy_id : "no policy grant");
-
-    setBadge("policy-badge", policy ? (policy.enabled ? "enabled" : "disabled") : "not found", policy ? (policy.enabled ? "good" : "bad") : "");
-    setText("max-per-tx", policy ? formatUnits(policy.max_per_transaction) : "--");
-    setText("max-total", policy ? formatUnits(policy.max_total) : "--");
-    setText("policy-expiry", policy ? formatTimestamp(policy.expires_at_ns) : "--");
-    setText("destination-count", policy ? String(policy.allowed_destinations.length) + " destinations" : "0 destinations");
-
-    const destinationRoot = byId("destinations");
-    destinationRoot.replaceChildren();
-    if (policy?.allowed_destinations?.length) {
-      for (const destination of policy.allowed_destinations) {
-        const chip = document.createElement("span");
-        chip.className = "chip";
-        chip.textContent = destination;
-        destinationRoot.append(chip);
-      }
-    } else {
-      const empty = document.createElement("span");
-      empty.className = "muted";
-      empty.textContent = "No destinations configured.";
-      destinationRoot.append(empty);
+    if (inString) {
+      normalized += character;
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === '"') inString = false;
+      index += 1;
+      continue;
     }
-    pretty("policy-json", policy);
 
-    setText("grant-agent", agentId);
-    setBadge("grant-badge", grant ? (grant.enabled ? "active grant" : "disabled grant") : "no grant", grant ? (grant.enabled ? "good" : "bad") : "");
-    setText("grant-policy", grant?.policy_id ?? "--");
-    setText("grant-enabled", grant ? (grant.enabled ? "enabled" : "disabled") : "not registered");
-    pretty("grant-json", grant);
+    if (character === '"') {
+      inString = true;
+      normalized += character;
+      index += 1;
+      continue;
+    }
 
-    setBadge("decision-badge", decision ? "authorized" : "not found", decision ? "good" : "");
-    setText("decision-amount", decision ? formatUnits(decision.amount) : "--");
-    setText("receipt-id", decision?.decision_id ?? "--");
-    setText("receipt-intent", decision?.intent_id ?? "--");
-    setText("receipt-destination", decision?.destination ?? "--");
-    setText("receipt-version", decision?.policy_version ?? "--");
-    setText("receipt-cumulative", decision ? formatUnits(decision.cumulative_spend) : "--");
-    setText("receipt-nonce", decision?.nonce ?? "--");
-    pretty("decision-json", decision);
+    if (character === "-" || (character >= "0" && character <= "9")) {
+      const match = /^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/.exec(source.slice(index));
+      if (!match) throw new Error("invalid numeric token in NEAR response");
+      const token = match[0];
+      normalized += /[.eE]/.test(token) ? token : '"' + token + '"';
+      index += token.length;
+      continue;
+    }
 
-    setText("connection-state", "connected · finalized");
-    setText("last-updated", highestBlock ? "block #" + highestBlock : "finalized state");
-  } catch (error) {
-    setText("connection-state", "rpc unavailable");
-    errorPanel.hidden = false;
-    setText("error-message", error instanceof Error ? error.message : "Unknown RPC error");
-  } finally {
-    button.disabled = false;
-    button.textContent = "↻ refresh state";
+    normalized += character;
+    index += 1;
   }
+
+  return JSON.parse(normalized);
 }
 
-byId("refresh-button").addEventListener("click", refresh);
-for (const id of ["contract-id", "policy-id", "agent-id", "decision-id"]) {
-  byId(id).addEventListener("keydown", (event) => {
-    if (event.key === "Enter") refresh();
-  });
+export function decodeNearResult(resultBytes) {
+  if (!Array.isArray(resultBytes)) throw new Error("NEAR RPC returned no result bytes");
+  const decoded = new TextDecoder().decode(Uint8Array.from(resultBytes));
+  if (decoded.length === 0) return null;
+  return parseNearJson(decoded);
 }
-refresh();
+
+export async function callView(contractId, methodName, args = {}, fetchImpl = globalThis.fetch) {
+  if (typeof fetchImpl !== "function") throw new Error("fetch is unavailable");
+  const response = await fetchImpl(TESTNET_RPC, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: "outlay-dashboard",
+      method: "query",
+      params: {
+        request_type: "call_function",
+        finality: "final",
+        account_id: contractId,
+        method_name: methodName,
+        args_base64: encodeJsonArgs(args),
+      },
+    }),
+  });
+
+  if (!response.ok) throw new Error("NEAR RPC HTTP " + response.status);
+  const body = await response.json();
+  if (body.error) throw new Error(body.error.message || "NEAR RPC request failed");
+  if (body.result?.error) throw new Error(body.result.error);
+  return {
+    value: decodeNearResult(body.result?.result),
+    blockHeight: body.result?.block_height ?? null,
+    blockHash: body.result?.block_hash ?? null,
+  };
+}
+
+function isUint(value) {
+  return typeof value === "string" && /^(0|[1-9][0-9]*)$/.test(value);
+}
+
+/**
+ * Checks internal consistency of fields read from the finalized contract.
+ * This is not a cryptographic proof or an independent transaction receipt.
+ */
+export function verifyDecisionReceipt(decision, expected) {
+  const checks = [
+    { label: "decision id matches requested receipt", passed: decision?.decision_id === expected.decisionId },
+    { label: "agent matches selected on-chain grant", passed: decision?.agent_id === expected.agentId },
+    { label: "policy matches selected policy", passed: decision?.policy_id === expected.policyId },
+    { label: "amount is a positive integer", passed: isUint(decision?.amount) && BigInt(decision.amount) > 0n },
+    { label: "policy version is valid", passed: isUint(decision?.policy_version) && isUint(expected.currentPolicyVersion) && BigInt(decision.policy_version) > 0n && BigInt(decision.policy_version) <= BigInt(expected.currentPolicyVersion) },
+    { label: "intent expiry does not exceed policy expiry", passed: isUint(decision?.intent_expires_at_ns) && isUint(decision?.policy_expires_at_ns) && BigInt(decision.intent_expires_at_ns) <= BigInt(decision.policy_expires_at_ns) },
+    { label: "authorization occurred before intent expiry", passed: isUint(decision?.authorized_at_ns) && isUint(decision?.intent_expires_at_ns) && BigInt(decision.authorized_at_ns) < BigInt(decision.intent_expires_at_ns) },
+    { label: "cumulative reservation covers this decision", passed: isUint(decision?.cumulative_spend) && isUint(decision?.amount) && BigInt(decision.cumulative_spend) >= BigInt(decision.amount) },
+    { label: "nonce is a valid integer", passed: isUint(decision?.nonce) },
+  ];
+  return { valid: checks.every((check) => check.passed), checks };
+}
