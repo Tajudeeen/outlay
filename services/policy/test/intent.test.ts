@@ -6,7 +6,7 @@ const valid = {
   agentId: "agent.testnet",
   policyId: "daily-limit",
   network: "near-testnet",
-  assetId: "native-near",
+  assetId: "policy-unit",
   destination: "merchant.testnet",
   amount: "1000000000000000000000000",
   nonce: "1",
@@ -40,4 +40,28 @@ describe("parseSpendIntent", () => {
     const { nonce: _nonce, ...missingNonce } = valid;
     expect(() => parseSpendIntent(missingNonce)).toThrow();
   });
+  it("rejects amounts outside the contract u128 range", () => {
+    expect(() => parseSpendIntent({
+      ...valid,
+      amount: "340282366920938463463374607431768211456",
+    })).toThrow();
+  });
+
+  it("rejects nonce and timestamps outside the contract u64 range", () => {
+    const tooLarge = "18446744073709551616";
+    expect(() => parseSpendIntent({ ...valid, nonce: tooLarge })).toThrow();
+    expect(() => parseSpendIntent({ ...valid, expiresAtNs: tooLarge })).toThrow();
+    expect(() => parseSpendIntent({ ...valid, createdAtNs: tooLarge })).toThrow();
+  });
+
+  it("accepts only the explicit abstract policy-unit asset marker", () => {
+    expect(() => parseSpendIntent({ ...valid, assetId: "native-near" })).toThrow();
+    expect(() => parseSpendIntent({ ...valid, assetId: "usdc" })).toThrow();
+  });
+
+  it("rejects intent and policy identifiers outside contract-safe characters", () => {
+    expect(() => parseSpendIntent({ ...valid, intentId: "intent/one" })).toThrow();
+    expect(() => parseSpendIntent({ ...valid, policyId: "daily policy" })).toThrow();
+  });
+
 });
