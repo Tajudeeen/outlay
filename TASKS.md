@@ -18,7 +18,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Implement atomic budget reservation accounting.
 - [x] Add nonce/replay protection and intent/policy expiry.
 - [x] Emit structured authorization and reservation-release events.
-- [x] Add 32 contract unit tests covering authorization, ownership, replay, budget limits, policy versions, and reservation lifecycle.
+- [x] Add 37 contract unit tests covering authorization, ownership, replay, budget limits, policy versions, and reservation lifecycle.
 - [x] Cover unauthorized callers, invalid identifiers, replay, and expiry denial paths in contract tests.
 
 ## Milestone 2: intent API and policy service
@@ -28,7 +28,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Serialize credential issuance, rotation, and revocation per agent with PostgreSQL transaction-scoped advisory locks.
 - [x] Add a PostgreSQL integration test proving concurrent first-time issuance cannot create two active keys.
 - [x] 24-hour idempotency records, payload mismatch detection, request size limits, and per-agent rate limits.
-- [x] API route tests, block-pinned NEAR reader/replay tests, and PostgreSQL integration tests in CI.
+- [x] API route tests, block-pinned NEAR reader/replay tests, PostgreSQL integration, and dependency-failure tests in CI.
 - [x] Deterministic fail-closed preflight evaluator and unit cases.
 - [x] Credential-store lookup failures reject authentication, and malformed numeric policy snapshots deny preflight.
 
@@ -59,7 +59,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Signer payload confusion.
 - [x] Rejected authorization leaves budget and decision count unchanged in contract unit tests.
 - [x] Malformed policy snapshots fail closed in policy-service tests.
-- [x] Add API failure-injection tests for credential lookup, idempotency reads/writes, and rate-limit storage. CI verification is pending.
+- [x] Add API failure-injection tests for credential lookup, idempotency reads/writes, and rate-limit storage. CI verification passed in the latest combined workflow.
 
 ## Milestone 6: dashboard and evidence
 - [x] Read-only testnet views for policy, agent grant, and decision receipt (RPC adapter CI and public browser check pass).
@@ -93,7 +93,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 
 - Rust contract: 37 tests passed (latest contract workflow [42613038594](https://github.com/Tajudeeen/outlay/actions/runs/42613038594) successful).
 - Policy and risk library: 59 tests passed, including 12 execution-envelope validation cases.
-- API: 26 tests passed, including PostgreSQL integration and dependency-failure coverage.
+- API: 31 tests passed, including PostgreSQL integration and dependency-failure coverage.
 - Dashboard RPC adapter: 7 tests passed.
 - Combined verified automated test count: 134 passed, 0 failed. Latest combined policy/API/dashboard/container workflow [42627291482](https://github.com/Tajudeeen/outlay/actions/runs/42627291482) passed. This includes PostgreSQL integration, API dependency-failure, and risk-gate coverage.
 - PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
