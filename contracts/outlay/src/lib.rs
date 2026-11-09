@@ -305,7 +305,7 @@ mod tests {
     fn destination_outside_policy_is_denied() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        contract.authorize_spend(account("attacker.testnet"), 10, 1, 500);
+        contract.authorize_spend("intent-1".into(), account("attacker.testnet"), 10, 1, 500);
     }
 
     #[test]
@@ -313,7 +313,7 @@ mod tests {
     fn transaction_limit_is_enforced() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        contract.authorize_spend(account("merchant.testnet"), 61, 1, 500);
+        contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 61, 1, 500);
     }
 
     #[test]
@@ -321,8 +321,8 @@ mod tests {
     fn total_budget_is_enforced() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        contract.authorize_spend(account("merchant.testnet"), 60, 1, 500);
-        contract.authorize_spend(account("merchant.testnet"), 41, 2, 500);
+        contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 60, 1, 500);
+        contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 41, 2, 500);
     }
 
     #[test]
@@ -330,8 +330,8 @@ mod tests {
     fn nonce_replay_is_denied() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        contract.authorize_spend(account("merchant.testnet"), 10, 7, 500);
-        contract.authorize_spend(account("merchant.testnet"), 10, 7, 500);
+        contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 10, 7, 500);
+        contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 10, 7, 500);
     }
 
     #[test]
@@ -356,7 +356,7 @@ mod tests {
     fn expired_intent_is_denied() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        contract.authorize_spend(account("merchant.testnet"), 10, 1, 20);
+        contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 10, 1, 20);
     }
 
     #[test]
@@ -366,7 +366,7 @@ mod tests {
         context(account("owner.testnet"), 20);
         contract.set_agent_enabled(account("agent.testnet"), false);
         context(account("agent.testnet"), 30);
-        contract.authorize_spend(account("merchant.testnet"), 10, 1, 500);
+        contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 10, 1, 500);
     }
 
     #[test]
@@ -401,7 +401,7 @@ mod tests {
     fn expired_reservation_can_be_released_once_by_owner() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        let decision = contract.authorize_spend(account("merchant.testnet"), 40, 9, 500);
+        let decision = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
         assert_eq!(contract.get_policy_spend("daily".into()), 40);
 
         context(account("owner.testnet"), 500);
@@ -415,7 +415,7 @@ mod tests {
     fn reservation_cannot_be_released_before_expiry() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        let decision = contract.authorize_spend(account("merchant.testnet"), 40, 9, 500);
+        let decision = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
         context(account("owner.testnet"), 499);
         contract.release_expired_reservation(decision.decision_id);
     }
@@ -425,7 +425,7 @@ mod tests {
     fn reservation_cannot_be_released_twice() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        let decision = contract.authorize_spend(account("merchant.testnet"), 40, 9, 500);
+        let decision = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
         context(account("owner.testnet"), 500);
         contract.release_expired_reservation(decision.decision_id.clone());
         contract.release_expired_reservation(decision.decision_id);
