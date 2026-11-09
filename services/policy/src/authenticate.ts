@@ -27,7 +27,13 @@ export async function authenticateAgent(
   if (!secret?.startsWith("outlay_agent_")) return null;
 
   const keyHash = hashAgentKey(secret);
-  const credential = await store.findByKeyHash(keyHash);
+  let credential: AgentCredentialRecord | null;
+  try {
+    credential = await store.findByKeyHash(keyHash);
+  } catch {
+    // An unavailable credential store must never authenticate a caller.
+    return null;
+  }
   if (!credential || !credential.enabled) return null;
   if (!verifyAgentKey(secret, credential.keyHash)) return null;
 
