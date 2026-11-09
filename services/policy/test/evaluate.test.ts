@@ -7,7 +7,7 @@ const intent = parseSpendIntent({
   agentId: "agent.testnet",
   policyId: "daily",
   network: "near-testnet",
-  assetId: "native-near",
+  assetId: "policy-unit",
   destination: "merchant.testnet",
   amount: "40",
   nonce: "1",
