@@ -10,6 +10,10 @@ const accountId = z.string().min(2).max(64).regex(/^[a-z0-9._-]+$/);
 const identifier = z.string().min(1).max(128).regex(/^[A-Za-z0-9._-]+$/);
 const decimal = z.string().regex(/^(0|[1-9][0-9]*)$/);
 const positiveDecimal = decimal.refine((v) => BigInt(v) > 0n);
+const U64_MAX = 18_446_744_073_709_551_615n;
+const U128_MAX = 340_282_366_920_938_463_463_374_607_431_768_211_455n;
+const u64 = decimal.refine((v) => BigInt(v) <= U64_MAX);
+const u128 = decimal.refine((v) => BigInt(v) <= U128_MAX);
 const hash = z.string().regex(/^[0-9a-f]{64}$/);
 
 export const AssetMappingSchema = z.object({
@@ -92,7 +96,7 @@ export function validateExecutionEnvelope(input: {
     return fail("NETWORK_MISMATCH");
   }
 
-  const auth = input.authorization;
+  const auth = authorizationResult.data;
   if (!auth.active) return fail("AUTHORIZATION_INACTIVE");
   if (auth.released) return fail("RESERVATION_RELEASED");
 
