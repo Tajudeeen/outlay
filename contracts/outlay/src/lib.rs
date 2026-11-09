@@ -25,6 +25,7 @@ pub struct AgentGrant {
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpendDecision {
     pub decision_id: String,
+    pub intent_id: String,
     pub agent_id: AccountId,
     pub policy_id: String,
     pub destination: AccountId,
@@ -48,6 +49,7 @@ pub struct Outlay {
     grants: LookupMap<AccountId, AgentGrant>,
     spend_by_policy: LookupMap<String, u128>,
     consumed_nonces: LookupSet<String>,
+    consumed_intents: LookupSet<String>,
     decisions: LookupMap<String, SpendDecision>,
     released_reservations: LookupSet<String>,
     decision_count: u64,
@@ -63,6 +65,7 @@ impl Outlay {
             grants: LookupMap::new(b"g"),
             spend_by_policy: LookupMap::new(b"s"),
             consumed_nonces: LookupSet::new(b"n"),
+            consumed_intents: LookupSet::new(b"i"),
             decisions: LookupMap::new(b"d"),
             released_reservations: LookupSet::new(b"r"),
             decision_count: 0,
@@ -111,6 +114,7 @@ impl Outlay {
     /// Caller must be the registered agent. This is authorization only, not payment.
     pub fn authorize_spend(
         &mut self,
+        intent_id: String,
         destination: AccountId,
         amount: u128,
         nonce: u64,
@@ -119,6 +123,7 @@ impl Outlay {
         let agent_id = env::predecessor_account_id();
         let now = env::block_timestamp();
         require!(amount > 0, "AMOUNT_ZERO");
+        require!(!intent_id.is_empty() && intent_id.len() <= 128, "INTENT_ID_INVALID");
 
         let grant = self
             .grants
@@ -141,6 +146,8 @@ impl Outlay {
 
         let nonce_key = format!("{}:{}", agent_id, nonce);
         require!(!self.consumed_nonces.contains(&nonce_key), "NONCE_REPLAY");
+        let intent_key = format!("{}:{}", agent_id, intent_id);
+        require!(!self.consumed_intents.contains(&intent_key), "INTENT_REPLAY");
 
         let spent = self
             .spend_by_policy
@@ -152,6 +159,7 @@ impl Outlay {
 
         // State changes occur only after all validation checks pass.
         self.consumed_nonces.insert(nonce_key);
+        self.consumed_intents.insert(intent_key);
         self
             .spend_by_policy
             .insert(grant.policy_id.clone(), next_spend);
@@ -163,6 +171,7 @@ impl Outlay {
         let decision_id = format!("outlay:{}:{}", env::block_height(), self.decision_count);
         let decision = SpendDecision {
             decision_id: decision_id.clone(),
+            intent_id: intent_id.clone(),
             agent_id: agent_id.clone(),
             policy_id: grant.policy_id,
             destination,
@@ -281,7 +290,7 @@ mod tests {
     fn authorized_spend_reserves_budget_and_consumes_nonce() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        let decision = contract.authorize_spend(account("merchant.testnet"), 40, 1, 500);
+        let decision = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 1, 500);
         assert_eq!(decision.amount, 40);
         assert_eq!(contract.get_policy_spend("daily".into()), 40);
         assert_eq!(contract.get_decision_count(), 1);
@@ -319,6 +328,15 @@ mod tests {
         context(account("agent.testnet"), 20);
         contract.authorize_spend(account("merchant.testnet"), 10, 7, 500);
         contract.authorize_spend(account("merchant.testnet"), 10, 7, 500);
+    }
+
+    #[test]
+    #[should_panic(expected = "INTENT_REPLAY")]
+    fn intent_replay_is_denied_even_with_new_nonce() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        contract.authorize_spend("same-intent".into(), account("merchant.testnet"), 10, 7, 500);
+        contract.authorize_spend("same-intent".into(), account("merchant.testnet"), 10, 8, 500);
     }
 
     #[test]
