@@ -1,4 +1,5 @@
 import type { AgentSnapshot, PolicySnapshot } from "@outlay/policy";
+import { parseNearJson } from "./near-json.js";
 
 export type ChainSnapshot = {
   agent: AgentSnapshot | null;
