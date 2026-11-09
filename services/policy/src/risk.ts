@@ -1,3 +1,4 @@
+import { createPublicKey, verify as verifySignature } from "node:crypto";
 import { z } from "zod";
 
 export const RiskCategorySchema = z.enum([
@@ -25,9 +26,24 @@ export const RiskSignalSchema = z.object({
   observedAtNs: uint,
   validUntilNs: uint,
   evidenceHash: z.string().regex(/^[a-f0-9]{64}$/),
+  signature: z.string().regex(/^[A-Za-z0-9_-]{86}$/),
 }).strict();
 
 export type RiskSignal = z.infer<typeof RiskSignalSchema>;
+export type UnsignedRiskSignal = Omit<RiskSignal, "signature">;
+
+/** Stable field order is part of the provider signing contract. */
+export function riskSignalSigningPayload(signal: UnsignedRiskSignal): string {
+  return JSON.stringify({
+    signalId: signal.signalId,
+    category: signal.category,
+    disposition: signal.disposition,
+    sourceId: signal.sourceId,
+    observedAtNs: signal.observedAtNs,
+    validUntilNs: signal.validUntilNs,
+    evidenceHash: signal.evidenceHash,
+  });
+}
 
 export type RiskEvaluation =
   | { decision: "clear"; reasonCode: "RISK_CLEAR"; signalIds: string[] }
@@ -42,7 +58,7 @@ export type RiskEvaluation =
 export function evaluateRisk(
   input: unknown,
   requiredCategories: readonly RiskCategory[],
-  trustedSources: readonly string[],
+  trustedSources: Readonly<Record<string, string>>,
   nowNs: string,
   maxSignalAgeNs: string,
 ): RiskEvaluation {
@@ -59,8 +75,31 @@ export function evaluateRisk(
   const ids = signals.map((signal) => signal.signalId);
 
   for (const signal of signals) {
-    if (!trustedSources.includes(signal.sourceId)) {
+    const publicKeyPem = trustedSources[signal.sourceId];
+    if (!publicKeyPem) {
       return { decision: "deny", reasonCode: "RISK_SOURCE_UNTRUSTED", signalIds: ids };
+    }
+    let signatureValid = false;
+    try {
+      signatureValid = verifySignature(
+        null,
+        Buffer.from(riskSignalSigningPayload({
+          signalId: signal.signalId,
+          category: signal.category,
+          disposition: signal.disposition,
+          sourceId: signal.sourceId,
+          observedAtNs: signal.observedAtNs,
+          validUntilNs: signal.validUntilNs,
+          evidenceHash: signal.evidenceHash,
+        })),
+        createPublicKey(publicKeyPem),
+        Buffer.from(signal.signature, "base64url"),
+      );
+    } catch {
+      signatureValid = false;
+    }
+    if (!signatureValid) {
+      return { decision: "deny", reasonCode: "RISK_SIGNATURE_INVALID", signalIds: ids };
     }
     const observed = BigInt(signal.observedAtNs);
     const validUntil = BigInt(signal.validUntilNs);
