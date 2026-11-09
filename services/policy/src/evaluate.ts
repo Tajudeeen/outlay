@@ -7,7 +7,7 @@ export type PolicySnapshot = {
   expiresAtNs: string;
   maxPerTransaction: string;
   maxTotal: string;
-  spent: string;
+  reserved: string;
   allowedDestinations: readonly string[];
 };
 
@@ -52,7 +52,7 @@ export function evaluatePreflight(
   const amount = parseUint(intent.amount, "intent.amount");
   const perTx = parseUint(policy.maxPerTransaction, "policy.maxPerTransaction");
   const maxTotal = parseUint(policy.maxTotal, "policy.maxTotal");
-  const spent = parseUint(policy.spent, "policy.spent");
+  const reserved = parseUint(policy.reserved, "policy.reserved");
 
   if (now >= intentExpiry) return { allowed: false, reasonCode: "INTENT_EXPIRED" };
   if (now >= policyExpiry) return { allowed: false, reasonCode: "POLICY_EXPIRED" };
@@ -63,7 +63,7 @@ export function evaluatePreflight(
     return { allowed: false, reasonCode: "DESTINATION_DENIED" };
   }
 
-  const nextSpend = spent + amount;
+  const nextSpend = reserved + amount;
   if (nextSpend > maxTotal) return { allowed: false, reasonCode: "BUDGET_EXCEEDED" };
 
   return {
