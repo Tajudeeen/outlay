@@ -30,13 +30,13 @@ Outlay is a security layer for autonomous agent spending. Agents may propose spe
 
 - `contracts/`: NEAR Rust contracts.
 - `services/`: TypeScript API and policy/risk services.
-- `apps/`: web dashboard.
+- `apps/dashboard/`: read-only NEAR testnet control plane for policies, agent grants, and authorization receipts.
 - `docs/`: architecture, threat model, decisions, and test strategy.
 - `tests/`: cross-component and adversarial tests.
 
 ## Development status
 
-See [TASKS.md](TASKS.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), [SECURITY.md](SECURITY.md), and the [testnet deployment runbook](docs/TESTNET_DEPLOYMENT.md).
+See [TASKS.md](TASKS.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), [SECURITY.md](SECURITY.md), and the [testnet deployment runbook](docs/TESTNET_DEPLOYMENT.md). Preview the read-only dashboard with `python -m http.server 4173 --directory apps/dashboard` and open `http://localhost:4173`.
 
 ## License
 
