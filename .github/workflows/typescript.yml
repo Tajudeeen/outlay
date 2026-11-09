@@ -19,6 +19,23 @@ on:
 jobs:
   policy-and-api:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: outlay_test
+          POSTGRES_USER: outlay
+          POSTGRES_PASSWORD: outlay_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U outlay -d outlay_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://outlay:outlay_ci_password@localhost:5432/outlay_test
+      PGSSL: disable
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -39,6 +56,8 @@ jobs:
         run: pnpm --filter @outlay/api build
       - name: Typecheck API
         run: pnpm --filter @outlay/api typecheck
+      - name: Apply API database migration
+        run: pnpm --filter @outlay/api migrate
       - name: Test API
         run: pnpm --filter @outlay/api test
       - name: Test dashboard RPC adapter
