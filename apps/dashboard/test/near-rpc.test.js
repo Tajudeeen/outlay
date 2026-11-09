@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { callView, decodeNearResult, encodeJsonArgs, parseNearJson, TESTNET_RPC } from "../src/near-rpc.js";
+import { callView, decodeNearResult, encodeJsonArgs, parseNearJson, TESTNET_RPC, verifyDecisionReceipt } from "../src/near-rpc.js";
 
 test("encodes JSON arguments as UTF-8 base64", () => {
   assert.equal(encodeJsonArgs({ policy_id: "smoke-test" }), "eyJwb2xpY3lfaWQiOiJzbW9rZS10ZXN0In0=");
@@ -42,4 +42,42 @@ test("calls a finalized read-only NEAR contract method", async () => {
   assert.equal(requestedBody.params.method_name, "get_decision_count");
   assert.equal(result.value, "1");
   assert.equal(result.blockHeight, 123);
+});
+
+
+test("verifies receipt fields without claiming cryptographic proof", () => {
+  const decision = {
+    decision_id: "outlay:100:1",
+    agent_id: "agent.testnet",
+    policy_id: "daily",
+    amount: "25",
+    policy_version: "1",
+    intent_expires_at_ns: "900",
+    policy_expires_at_ns: "1000",
+    authorized_at_ns: "500",
+    cumulative_spend: "25",
+    nonce: "4",
+  };
+  const expected = {
+    decisionId: "outlay:100:1",
+    agentId: "agent.testnet",
+    policyId: "daily",
+    currentPolicyVersion: "2",
+  };
+  expect(verifyDecisionReceipt(decision, expected).valid).toBe(true);
+  expect(verifyDecisionReceipt({ ...decision, amount: "0" }, expected).valid).toBe(false);
+  expect(verifyDecisionReceipt({ ...decision, agent_id: "attacker.testnet" }, expected).valid).toBe(false);
+});
+
+test("rejects malformed expiry and future policy version in receipt checks", () => {
+  const decision = {
+    decision_id: "outlay:100:1", agent_id: "agent.testnet", policy_id: "daily",
+    amount: "25", policy_version: "9", intent_expires_at_ns: "bad",
+    policy_expires_at_ns: "1000", authorized_at_ns: "500",
+    cumulative_spend: "25", nonce: "4",
+  };
+  const result = verifyDecisionReceipt(decision, {
+    decisionId: "outlay:100:1", agentId: "agent.testnet", policyId: "daily", currentPolicyVersion: "2",
+  });
+  expect(result.valid).toBe(false);
 });
