@@ -17,3 +17,10 @@ Shared runtime schemas for untrusted agent spending intents and lifecycle record
 - Credential-store lookup errors fail closed and return no authenticated identity.
 - `AgentCredentialStore` is an interface. The API package now includes a PostgreSQL adapter, explicit key rotation, revocation audit events, fixed-window rate limits, and idempotency storage. A managed production database and operational monitoring still need configuration.
 - Never log bearer tokens or return stored digests from public APIs.
+
+## Deterministic risk gate
+
+- `evaluateRisk` validates signal schema, trusted source IDs, evidence hashes, freshness windows, and required signal categories.
+- Missing, stale, future-dated, duplicate, contradictory, or untrusted signals fail closed.
+- A signal may clear, request review, or deny. The evaluator cannot authorize a spend.
+- The risk evaluator is a tested library primitive. It is not yet connected to a live external risk provider or the API route. Do not claim live reputation or anomaly detection until trusted providers and provenance are configured.
