@@ -53,6 +53,8 @@ near contract deploy <outlay-deployer.testnet> use-file <path-to-outlay_contract
 
 Do not use `with-init-call new` for a code-only upgrade.
 
+The current contract adds read-only `is_nonce_consumed(agent_id, nonce)` and `is_intent_consumed(agent_id, intent_id)` views. These do not change storage layout, but the API requires them to be present before preflight can check replay state. Verify both methods after the upgrade.
+
 ## Verify
 
 1. Confirm the deploy transaction reached final success.
@@ -60,7 +62,8 @@ Do not use `with-init-call new` for a code-only upgrade.
 3. Confirm the deployed WASM checksum matches the downloaded CI artifact checksum.
 4. Call `get_decision_count` and confirm it returns `0`.
 5. Call `get_policy_version` for an unknown policy and confirm it returns `0`.
-6. Save the transaction hash, account ID, commit SHA, artifact digest, and verification output in the deployment record.
+6. Call `is_nonce_consumed` and `is_intent_consumed` for known and unused test values and confirm the expected booleans.
+7. Save the transaction hash, account ID, commit SHA, artifact digest, and verification output in the deployment record.
 
 Do not configure policies or register production agents until the deployment has been reviewed.
 
