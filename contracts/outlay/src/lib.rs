@@ -411,6 +411,18 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "INTENT_REPLAY")]
+    fn releasing_reservation_does_not_restore_intent_id() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        let decision = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
+        context(account("owner.testnet"), 500);
+        contract.release_expired_reservation(decision.decision_id);
+        context(account("agent.testnet"), 501);
+        contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 10, 900);
+    }
+
+    #[test]
     #[should_panic(expected = "RESERVATION_NOT_EXPIRED")]
     fn reservation_cannot_be_released_before_expiry() {
         let mut contract = setup();
