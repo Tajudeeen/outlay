@@ -350,6 +350,7 @@ describe("Outlay API handler", () => {
     });
     expect(first.status).toBe(200);
     expect(second.status).toBe(429);
+    expect(second.headers.get("retry-after")).toBe("60");
   });
 
   it("rejects an invalid or missing idempotency key", async () => {
