@@ -24,3 +24,10 @@ Shared runtime schemas for untrusted agent spending intents and lifecycle record
 - Missing, stale, future-dated, duplicate, contradictory, or untrusted signals fail closed.
 - A signal may clear, request review, or deny. The evaluator cannot authorize a spend.
 - The risk evaluator is a tested library primitive. It is not yet connected to a live external risk provider or the API route. Provider public keys and source operations still need configuration. Do not claim live reputation or anomaly detection until trusted providers are integrated.
+
+## Pre-sign execution envelope validator
+
+- `validateExecutionEnvelope` builds a strict envelope from verified authorization facts and an explicit asset mapping. It does not accept arbitrary agent transaction objects.
+- Conversion from abstract policy units to asset base units uses an explicit rational mapping and rejects inexact conversion, expired/inactive/released authorization, malformed chain evidence, and amounts above the configured asset cap.
+- The envelope hash is a deterministic SHA-256 digest of the validated canonical field order.
+- This is a pre-sign validation primitive only. No signer, Chain Signatures call, broadcast, or settlement is implemented. No asset mapping is approved or enabled by default. Production use requires independent verification of the supplied authorization facts and reviewed asset configuration.
