@@ -15,6 +15,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/services/policy ./services/policy
+COPY --from=build /app/services/api/node_modules ./services/api/node_modules
+COPY --from=build /app/services/policy/node_modules ./services/policy/node_modules
 COPY --from=build /app/services/api/package.json ./services/api/package.json
 COPY --from=build /app/services/api/dist ./services/api/dist
 COPY --from=build /app/services/api/migrations ./services/api/migrations
