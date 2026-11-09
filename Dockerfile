@@ -20,6 +20,8 @@ COPY --from=build /app/services/policy/node_modules ./services/policy/node_modul
 COPY --from=build /app/services/api/package.json ./services/api/package.json
 COPY --from=build /app/services/api/dist ./services/api/dist
 COPY --from=build /app/services/api/migrations ./services/api/migrations
+RUN chown -R node:node /app
+USER node
 WORKDIR /app/services/api
 EXPOSE 8787
 CMD ["node", "dist/server.js"]
