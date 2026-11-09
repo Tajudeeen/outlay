@@ -58,6 +58,20 @@ describe("evaluatePreflight", () => {
     });
   });
 
+  it("denies intents created in the future", () => {
+    const future = parseSpendIntent({ ...intent, createdAtNs: "201" });
+    expect(evaluatePreflight(future, agent, policy, "200")).toEqual({
+      allowed: false, reasonCode: "INTENT_FROM_FUTURE",
+    });
+  });
+
+  it("denies invalid intent time windows", () => {
+    const invalid = parseSpendIntent({ ...intent, createdAtNs: "500" });
+    expect(evaluatePreflight(invalid, agent, policy, "200")).toEqual({
+      allowed: false, reasonCode: "INVALID_INTENT_WINDOW",
+    });
+  });
+
   it("uses bigint math for values above JavaScript safe integer", () => {
     const huge = parseSpendIntent({ ...intent, amount: "9007199254740993" });
     const hugePolicy = { ...policy, maxPerTransaction: "9007199254740993", maxTotal: "9007199254740993", reserved: "0" };
