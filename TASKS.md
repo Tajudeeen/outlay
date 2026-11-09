@@ -89,8 +89,8 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 
 - Rust contract: 34 tests passed.
 - Policy and risk library: 43 tests passed.
-- API: 24 tests passed, including PostgreSQL integration tests.
+- API: 25 tests passed, including PostgreSQL integration tests.
 - Dashboard RPC adapter: 7 tests passed.
-- Combined automated test count: 108 passed, 0 failed.
+- Combined automated test count: 109 passed, 0 failed.
 - PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
-- API container: image build and runtime `/health` check passed against PostgreSQL in CI.
+- API container: non-root image build and runtime `/health` check passed against PostgreSQL in CI.
