@@ -18,6 +18,8 @@ describe("NearRpcReader", () => {
       '{"enabled":true,"expires_at_ns":2000000000000000000,"max_per_transaction":50,"max_total":100,"allowed_destinations":["merchant.testnet"]}',
       "1",
       "25",
+      "false",
+      "false",
     ];
     const fetchImpl: typeof fetch = async (_input, init) => {
       const body = JSON.parse(String(init?.body)) as { params: Record<string, unknown> };
@@ -27,7 +29,7 @@ describe("NearRpcReader", () => {
       return responseFor(next);
     };
     const reader = new NearRpcReader("https://rpc.testnet.fastnear.com", fetchImpl);
-    const snapshot = await reader.getAgentSnapshot("outlay-deployer.testnet", "agent.testnet");
+    const snapshot = await reader.getAgentSnapshot("outlay-deployer.testnet", "agent.testnet", "intent-001", "9");
 
     expect(snapshot.agent).toEqual({ agentId: "agent.testnet", enabled: true, policyId: "daily" });
     expect(snapshot.policy).toEqual({
@@ -42,7 +44,9 @@ describe("NearRpcReader", () => {
     });
     expect(snapshot.blockHeight).toBe(42);
     expect(snapshot.blockHash).toBe("block-42");
-    expect(requests).toHaveLength(4);
+    expect(snapshot.nonceConsumed).toBe(false);
+    expect(snapshot.intentConsumed).toBe(false);
+    expect(requests).toHaveLength(6);
     expect(requests.slice(1).every((params) => params.block_id === "block-42")).toBe(true);
   });
 
@@ -53,14 +57,16 @@ describe("NearRpcReader", () => {
       '{"enabled":true,"expires_at_ns":2000,"max_per_transaction":50,"max_total":100,"allowed_destinations":["merchant.testnet"]}',
       "1",
       "25",
+      "false",
+      "false",
     ];
     const fetchImpl: typeof fetch = async () => {
       const index = call++;
       const next = payloads[index];
-      return responseFor(next ?? "null", index === 3 ? "different-block" : "block-42");
+      return responseFor(next ?? "null", index === 5 ? "different-block" : "block-42");
     };
     const reader = new NearRpcReader("https://rpc.testnet.fastnear.com", fetchImpl);
-    await expect(reader.getAgentSnapshot("outlay-deployer.testnet", "agent.testnet"))
+    await expect(reader.getAgentSnapshot("outlay-deployer.testnet", "agent.testnet", "intent-002", "10"))
       .rejects.toThrow("INCONSISTENT_NEAR_SNAPSHOT");
   });
 
@@ -71,7 +77,7 @@ describe("NearRpcReader", () => {
       return responseFor("null");
     };
     const reader = new NearRpcReader("https://rpc.testnet.fastnear.com", fetchImpl);
-    const snapshot = await reader.getAgentSnapshot("outlay-deployer.testnet", "unknown.testnet");
+    const snapshot = await reader.getAgentSnapshot("outlay-deployer.testnet", "unknown.testnet", "intent-003", "11");
     expect(snapshot.agent).toBeNull();
     expect(snapshot.policy).toBeNull();
     expect(calls).toBe(1);
