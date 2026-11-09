@@ -85,6 +85,8 @@ impl Outlay {
         );
         require!(policy.max_per_transaction > 0, "MAX_TX_ZERO");
         require!(policy.max_total >= policy.max_per_transaction, "INVALID_BUDGET");
+        let currently_reserved = self.spend_by_policy.get(&policy_id).copied().unwrap_or(0);
+        require!(policy.max_total >= currently_reserved, "BUDGET_BELOW_RESERVED");
         require!(!policy.allowed_destinations.is_empty(), "DESTINATIONS_EMPTY");
         let next_version = self
             .policy_versions
@@ -489,4 +491,91 @@ mod tests {
         contract.release_expired_reservation(decision.decision_id.clone());
         contract.release_expired_reservation(decision.decision_id);
     }
+
+    #[test]
+    #[should_panic(expected = "AMOUNT_ZERO")]
+    fn zero_amount_is_denied() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        contract.authorize_spend("zero-amount".into(), account("merchant.testnet"), 0, 1, 500);
+    }
+
+    #[test]
+    #[should_panic(expected = "POLICY_DISABLED")]
+    fn disabled_policy_is_denied() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 20);
+        let mut policy = contract.get_policy("daily".into()).unwrap();
+        policy.enabled = false;
+        contract.set_policy("daily".into(), policy);
+        context(account("agent.testnet"), 30);
+        contract.authorize_spend("disabled-policy".into(), account("merchant.testnet"), 10, 1, 500);
+    }
+
+    #[test]
+    #[should_panic(expected = "POLICY_EXPIRED")]
+    fn expired_policy_is_denied() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 20);
+        let mut policy = contract.get_policy("daily".into()).unwrap();
+        policy.expires_at_ns = 20;
+        contract.set_policy("daily".into(), policy);
+        context(account("agent.testnet"), 21);
+        contract.authorize_spend("expired-policy".into(), account("merchant.testnet"), 10, 1, 500);
+    }
+
+    #[test]
+    #[should_panic(expected = "INTENT_OUTLIVES_POLICY")]
+    fn intent_cannot_outlive_policy() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        contract.authorize_spend("long-intent".into(), account("merchant.testnet"), 10, 1, 1_001);
+    }
+
+    #[test]
+    #[should_panic(expected = "AGENT_NOT_REGISTERED")]
+    fn unregistered_agent_is_denied() {
+        let mut contract = setup();
+        context(account("stranger.testnet"), 20);
+        contract.authorize_spend("unknown-agent".into(), account("merchant.testnet"), 10, 1, 500);
+    }
+
+    #[test]
+    #[should_panic(expected = "BUDGET_BELOW_RESERVED")]
+    fn policy_budget_cannot_be_reduced_below_existing_reservations() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        contract.authorize_spend("reserved-before-update".into(), account("merchant.testnet"), 40, 1, 500);
+
+        context(account("owner.testnet"), 30);
+        contract.set_policy("daily".into(), Policy {
+            enabled: true,
+            expires_at_ns: 1_000,
+            max_per_transaction: 30,
+            max_total: 30,
+            allowed_destinations: vec![account("merchant.testnet")],
+        });
+    }
+
+    #[test]
+    fn rejected_authorization_does_not_change_budget_or_decision_count() {
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            contract.authorize_spend(
+                "over-limit-no-mutation".into(),
+                account("merchant.testnet"),
+                61,
+                1,
+                500,
+            );
+        }));
+
+        assert!(result.is_err());
+        assert_eq!(contract.get_policy_spend("daily".into()), 0);
+        assert_eq!(contract.get_decision_count(), 0);
+    }
+
 }
