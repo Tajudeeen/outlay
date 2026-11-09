@@ -15,7 +15,7 @@ The first authorization contract reserves policy budget before any transaction e
 - Release is permitted only at or after the recorded intent expiry.
 - Release is idempotent and cannot be performed twice.
 - Releasing a reservation does not restore the nonce.
-- Release does not prove that execution failed or that funds were not transferred.
+- Release does not prove that execution failed or that funds were not transferred.\n- This release mechanism is valid only while the contract has no execution/signing adapter. Before any signer is connected, release must require proof that no still-valid transaction can execute, or a protocol-enforced expiry/cancellation guarantee.
 
 ## Consequences
 
