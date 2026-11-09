@@ -46,14 +46,33 @@ export function evaluatePreflight(
   if (policy.policyId !== intent.policyId) return { allowed: false, reasonCode: "POLICY_MISMATCH" };
   if (!policy.enabled) return { allowed: false, reasonCode: "POLICY_DISABLED" };
 
-  const now = parseUint(nowNs, "nowNs");
-  const intentCreated = parseUint(intent.createdAtNs, "intent.createdAtNs");
-  const intentExpiry = parseUint(intent.expiresAtNs, "intent.expiresAtNs");
-  const policyExpiry = parseUint(policy.expiresAtNs, "policy.expiresAtNs");
-  const amount = parseUint(intent.amount, "intent.amount");
-  const perTx = parseUint(policy.maxPerTransaction, "policy.maxPerTransaction");
-  const maxTotal = parseUint(policy.maxTotal, "policy.maxTotal");
-  const reserved = parseUint(policy.reserved, "policy.reserved");
+  let now: bigint;
+  let intentCreated: bigint;
+  let intentExpiry: bigint;
+  let policyExpiry: bigint;
+  let amount: bigint;
+  let perTx: bigint;
+  let maxTotal: bigint;
+  let reserved: bigint;
+  let version: bigint;
+
+  try {
+    now = parseUint(nowNs, "nowNs");
+    intentCreated = parseUint(intent.createdAtNs, "intent.createdAtNs");
+    intentExpiry = parseUint(intent.expiresAtNs, "intent.expiresAtNs");
+    policyExpiry = parseUint(policy.expiresAtNs, "policy.expiresAtNs");
+    amount = parseUint(intent.amount, "intent.amount");
+    perTx = parseUint(policy.maxPerTransaction, "policy.maxPerTransaction");
+    maxTotal = parseUint(policy.maxTotal, "policy.maxTotal");
+    reserved = parseUint(policy.reserved, "policy.reserved");
+    version = parseUint(policy.version, "policy.version");
+  } catch {
+    return { allowed: false, reasonCode: "INVALID_NUMERIC_INPUT" };
+  }
+
+  if (version === 0n || perTx === 0n || maxTotal < perTx || reserved > maxTotal) {
+    return { allowed: false, reasonCode: "INVALID_POLICY_SNAPSHOT" };
+  }
 
   if (intentCreated >= intentExpiry) return { allowed: false, reasonCode: "INVALID_INTENT_WINDOW" };
   if (intentCreated > now) return { allowed: false, reasonCode: "INTENT_FROM_FUTURE" };
