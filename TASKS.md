@@ -26,7 +26,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Agent key issuance, digest-only storage interface, and bearer authentication module.
 - [x] PostgreSQL credential store, explicit key rotation/revocation audit, fixed-window rate limiting, and on-chain agent-to-policy resolution.
 - [x] 24-hour idempotency records, payload mismatch detection, request size limits, and per-agent rate limits.
-- [x] API route tests, block-pinned NEAR reader tests, and PostgreSQL integration tests in CI.
+- [x] API route tests, block-pinned NEAR reader/replay tests, and PostgreSQL integration tests in CI.
 - [x] Deterministic fail-closed preflight evaluator and unit cases.
 - [x] Credential-store lookup failures reject authentication, and malformed numeric policy snapshots deny preflight.
 
