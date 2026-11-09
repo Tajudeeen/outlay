@@ -40,6 +40,13 @@ describe("parseSpendIntent", () => {
     const { nonce: _nonce, ...missingNonce } = valid;
     expect(() => parseSpendIntent(missingNonce)).toThrow();
   });
+  it("accepts the maximum contract u128 amount", () => {
+    expect(parseSpendIntent({
+      ...valid,
+      amount: "340282366920938463463374607431768211455",
+    }).amount).toBe("340282366920938463463374607431768211455");
+  });
+
   it("rejects amounts outside the contract u128 range", () => {
     expect(() => parseSpendIntent({
       ...valid,
