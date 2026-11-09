@@ -17,7 +17,7 @@ Open https://outlay-dashboard.vercel.app. The dashboard is read-only and queries
 
 ### 0:15-0:35 - Live contract state
 
-Open the dashboard and refresh. Show the finalized NEAR testnet connection, the policy, the agent grant, and the decision receipt. Point out that the dashboard reads the chain directly and does not submit transactions.
+Open the dashboard and refresh. Show the finalized NEAR testnet connection, the policy, the agent grant, and the decision receipt. Point out that all views are pinned to one finalized block and the dashboard does not submit transactions.
 
 ### 0:35-0:55 - Policy boundary
 
@@ -25,7 +25,7 @@ Show the `smoke-test` policy: 50 units maximum per request, 100 total units, and
 
 ### 0:55-1:20 - Successful authorization
 
-Open the successful authorization transaction in NEAR Explorer. Show that `outlay-agent.testnet` called `authorize_spend`, the contract checked the registered grant and policy, and the contract stored a decision with cumulative reserved amount 25.
+Open the successful authorization transaction in NEAR Explorer. Show that `outlay-agent.testnet` called `authorize_spend`, the contract checked the registered grant and policy, and the contract stored a decision with cumulative reserved amount 25. Return to the dashboard and show the RPC-read consistency checks, explaining that they are not an independent cryptographic proof.
 
 ### 1:20-1:45 - Denial evidence
 
