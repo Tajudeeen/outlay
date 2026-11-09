@@ -120,7 +120,8 @@ export function validateExecutionEnvelope(input: {
   if (auth.released) return fail("RESERVATION_RELEASED");
 
   const parsedNow = u64.safeParse(input.nowNs);
-  if (!parsedNow.success) return fail("AUTHORIZATION_NUMERIC_INVALID");\n
+  if (!parsedNow.success) return fail("AUTHORIZATION_NUMERIC_INVALID");
+
   let now: bigint;
   let expiry: bigint;
   let policyAmount: bigint;
