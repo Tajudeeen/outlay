@@ -62,7 +62,7 @@ describe("parseSpendIntent", () => {
   });
 
   it("accepts only the explicit abstract policy-unit asset marker", () => {
-    expect(() => parseSpendIntent({ ...valid, assetId: "native-near" })).toThrow();
+    expect(() => parseSpendIntent({ ...valid, assetId: "policy-unit" })).toThrow();
     expect(() => parseSpendIntent({ ...valid, assetId: "usdc" })).toThrow();
   });
 
