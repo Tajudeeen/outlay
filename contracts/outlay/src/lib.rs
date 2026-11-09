@@ -52,9 +52,9 @@ pub struct Outlay {
 #[near]
 impl Outlay {
     #[init]
-    pub fn new(owner: AccountId) -> Self {
+    pub fn new() -> Self {
         Self {
-            owner,
+            owner: env::predecessor_account_id(),
             policies: LookupMap::new(b"p"),
             grants: LookupMap::new(b"g"),
             spend_by_policy: LookupMap::new(b"s"),
@@ -136,9 +136,10 @@ impl Outlay {
             cumulative_spend: next_spend,
         };
 
+        // NEP-297-style event: this records authorization only, not execution.
         env::log_str(&format!(
-            "OUTLAY_DECISION:{{\"decision_id\":\"{}\",\"agent_id\":\"{}\",\"amount\":\"{}\",\"nonce\":{}}}",
-            decision_id, agent_id, amount, nonce
+            "EVENT_JSON:{{\"standard\":\"outlay\",\"version\":\"1.0.0\",\"event\":\"spend_authorized\",\"data\":[{{\"decision_id\":\"{}\",\"agent_id\":\"{}\",\"policy_id\":\"{}\",\"destination\":\"{}\",\"amount\":\"{}\",\"nonce\":\"{}\",\"authorized_at_ns\":\"{}\",\"cumulative_spend\":\"{}\"}}]}}",
+            decision_id, agent_id, decision.policy_id, decision.destination, amount, nonce, now, next_spend
         ));
         decision
     }
@@ -182,7 +183,7 @@ mod tests {
 
     fn setup() -> Outlay {
         context(account("owner.testnet"), 10);
-        let mut contract = Outlay::new(account("owner.testnet"));
+        let mut contract = Outlay::new();
         contract.set_policy("daily".into(), Policy {
             enabled: true,
             expires_at_ns: 1_000,
