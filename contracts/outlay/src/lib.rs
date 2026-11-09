@@ -124,6 +124,10 @@ impl Outlay {
         let now = env::block_timestamp();
         require!(amount > 0, "AMOUNT_ZERO");
         require!(!intent_id.is_empty() && intent_id.len() <= 128, "INTENT_ID_INVALID");
+        require!(
+            intent_id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.'),
+            "INTENT_ID_INVALID"
+        );
 
         let grant = self
             .grants
@@ -328,6 +332,14 @@ mod tests {
         context(account("agent.testnet"), 20);
         contract.authorize_spend(account("merchant.testnet"), 10, 7, 500);
         contract.authorize_spend(account("merchant.testnet"), 10, 7, 500);
+    }
+
+    #[test]
+    #[should_panic(expected = "INTENT_ID_INVALID")]
+    fn intent_id_rejects_event_injection_characters() {
+        let mut contract = setup();
+        context(account("agent.testnet"), 20);
+        contract.authorize_spend("bad/id".into(), account("merchant.testnet"), 10, 1, 500);
     }
 
     #[test]
