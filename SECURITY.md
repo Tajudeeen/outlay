@@ -73,7 +73,7 @@ Assume an attacker can:
 - The API validates strict intent schemas, bounds integer fields to the contract's u64/u128 types, binds bearer credentials to an on-chain agent account, and reads policy state from one pinned finalized block.
 - Agent API keys contain 256 bits of random entropy. PostgreSQL stores only SHA-256 digests. Rotation and revocation are transactional and generate audit events.
 - The API uses per-agent rate limits and 24-hour idempotency records. A preflight allow is advisory and never claims contract authorization.
-- The risk evaluator rejects missing, stale, future-dated, duplicate, contradictory, and untrusted signals. It can return clear, review, or deny, but it cannot authorize spending.
+- The risk evaluator verifies Ed25519 signatures from configured source public keys and rejects missing, stale, future-dated, duplicate, contradictory, tampered, and untrusted signals. It can return clear, review, or deny, but it cannot authorize spending. No provider keys or live provider are configured yet.
 - CI runs policy, API, dashboard, and PostgreSQL integration tests and builds the API container image.
 
 ## Known gaps and residual risks
