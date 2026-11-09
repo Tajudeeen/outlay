@@ -15,5 +15,5 @@ Shared runtime schemas for untrusted agent spending intents and lifecycle record
 - Compare digests with a constant-time byte comparison.
 - Disabled or unknown credentials are rejected.
 - Credential-store lookup errors fail closed and return no authenticated identity.
-- `AgentCredentialStore` is an interface. A production database adapter, key rotation, revocation audit trail, and rate limiting are still required.
+- `AgentCredentialStore` is an interface. The API package now includes a PostgreSQL adapter, explicit key rotation, revocation audit events, fixed-window rate limits, and idempotency storage. A managed production database and operational monitoring still need configuration.
 - Never log bearer tokens or return stored digests from public APIs.
