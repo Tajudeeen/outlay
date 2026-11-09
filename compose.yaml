@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: outlay
+      POSTGRES_USER: outlay
+      POSTGRES_PASSWORD: local-only-change-me
+    ports:
+      - "5432:5432"
+    volumes:
+      - outlay-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U outlay -d outlay"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://outlay:local-only-change-me@db:5432/outlay
+      PGSSL: disable
+      OUTLAY_ADMIN_TOKEN: ${OUTLAY_ADMIN_TOKEN:?Set OUTLAY_ADMIN_TOKEN in your shell or .env file}
+      OUTLAY_CONTRACT_ID: outlay-deployer.testnet
+      NEAR_TESTNET_RPC_URL: https://rpc.testnet.fastnear.com
+      PORT: 8787
+    ports:
+      - "8787:8787"
+    command: ["sh", "-c", "node dist/migrate.js && node dist/server.js"]
+
+volumes:
+  outlay-postgres:
