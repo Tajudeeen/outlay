@@ -27,3 +27,9 @@ jobs:
         run: cargo test --workspace
       - name: Build contract wasm
         run: cargo build -p outlay-contract --target wasm32-unknown-unknown --release
+      - name: Upload contract wasm
+        uses: actions/upload-artifact@v4
+        with:
+          name: outlay-contract-wasm
+          path: target/wasm32-unknown-unknown/release/outlay_contract.wasm
+          if-no-files-found: error
