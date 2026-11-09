@@ -94,6 +94,9 @@ export function createApiHandler(deps: ApiDependencies): (request: Request) => P
       try {
         const snapshot = await deps.chain.getAgentSnapshot(deps.contractId, record.agentId, "", "0");
         if (!snapshot.agent || !snapshot.agent.enabled) return json(409, { error: "AGENT_NOT_ENABLED_ON_CHAIN" });
+        if (!snapshot.policy || !snapshot.policy.enabled || BigInt(snapshot.policy.expiresAtNs) <= BigInt(nowNs())) {
+          return json(409, { error: "AGENT_POLICY_NOT_ACTIVE_ON_CHAIN" });
+        }
         const issued = issueAgentKey();
         await deps.store.issueCredential(record.agentId, issued.keyHash, record.rotate === true);
         return json(201, {
