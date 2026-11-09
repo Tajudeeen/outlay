@@ -72,7 +72,7 @@ curl -X POST http://localhost:8787/v1/admin/agent-keys/revoke \
 
 ## Preflight request
 
-The caller must send a strict intent body, an API bearer key, and a unique idempotency key. The API checks that the authenticated agent ID matches the intent and reads the current grant and policy from NEAR testnet.
+The caller must send a strict intent body, an API bearer key, and a unique idempotency key. The API checks that the authenticated agent ID matches the intent and reads the current grant and policy from NEAR testnet. The current schema accepts only the `policy-unit` marker. Amounts are abstract integer policy units, not NEAR, yoctoNEAR, USDC, or a transferable asset quantity. The contract does not store or enforce an asset identifier.
 
 ```sh
 curl -X POST http://localhost:8787/v1/intents/preflight \
@@ -84,7 +84,7 @@ curl -X POST http://localhost:8787/v1/intents/preflight \
     "agentId":"outlay-agent.testnet",
     "policyId":"smoke-test",
     "network":"near-testnet",
-    "assetId":"native-near",
+    "assetId":"policy-unit",
     "destination":"outlay-agent.testnet",
     "amount":"10",
     "nonce":"100",
