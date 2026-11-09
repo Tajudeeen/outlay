@@ -22,11 +22,11 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Contract tests for unauthorized and adversarial calls.
 
 ## Milestone 2: intent API and policy service
-- [ ] TypeScript schemas and canonical serialization.
+- [x] TypeScript strict intent schema and decimal-string boundaries (CI pending).
 - [ ] Authentication and agent-to-policy mapping.
 - [ ] Idempotency and request limits.
 - [ ] API integration tests against contract behavior.
-- [ ] Fail-closed behavior for critical dependency failures.
+- [x] Deterministic fail-closed preflight evaluator and unit cases (CI pending).\n- [ ] Fail-closed behavior for critical dependency failures.
 
 ## Milestone 3: signing/execution boundary
 - [ ] Document signing threat model and supported transaction shapes.
