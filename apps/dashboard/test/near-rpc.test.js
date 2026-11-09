@@ -81,3 +81,24 @@ test("rejects malformed expiry and future policy version in receipt checks", () 
   });
   assert.equal(result.valid, false);
 });
+
+
+test("pins follow-up view calls to the selected finalized block hash", async () => {
+  let requestedBody;
+  const fetchImpl = async (_url, options) => {
+    requestedBody = JSON.parse(options.body);
+    return new Response(JSON.stringify({
+      jsonrpc: "2.0",
+      id: "outlay-dashboard",
+      result: {
+        result: Array.from(new TextEncoder().encode("1")),
+        logs: [],
+        block_height: 123,
+        block_hash: "pinned-block-hash",
+      },
+    }), { status: 200 });
+  };
+  await callView("outlay-deployer.testnet", "get_decision_count", {}, fetchImpl, "pinned-block-hash");
+  assert.equal(requestedBody.params.block_id, "pinned-block-hash");
+  assert.equal("finality" in requestedBody.params, false);
+});
