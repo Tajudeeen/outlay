@@ -22,7 +22,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Cover unauthorized callers, invalid identifiers, replay, and expiry denial paths in contract tests.
 
 ## Milestone 2: intent API and policy service
-- [x] TypeScript strict intent schema and decimal-string boundaries.
+- [x] TypeScript strict intent schema, contract-safe identifiers, u64/u128 bounds, and abstract policy-unit semantics.
 - [x] Agent key issuance, digest-only storage interface, and bearer authentication module.
 - [x] PostgreSQL credential store, explicit key rotation/revocation audit, fixed-window rate limiting, and on-chain agent-to-policy resolution.
 - [x] 24-hour idempotency records, payload mismatch detection, request size limits, and per-agent rate limits.
