@@ -36,7 +36,7 @@ Outlay is a security layer for autonomous agent spending. Agents may propose spe
 
 ## Development status
 
-See [TASKS.md](TASKS.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), [SECURITY.md](SECURITY.md), and the [testnet deployment runbook](docs/TESTNET_DEPLOYMENT.md). Preview the read-only dashboard with `python -m http.server 4173 --directory apps/dashboard` and open `http://localhost:4173`.
+See [TASKS.md](TASKS.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), [SECURITY.md](SECURITY.md), and the [testnet deployment runbook](docs/TESTNET_DEPLOYMENT.md). Preview the read-only dashboard with `python -m http.server 4173 --directory apps/dashboard` and open `http://localhost:4173`. See [the testnet adversarial smoke suite](docs/TESTNET_SMOKE_TEST.md) for the repeatable PowerShell test runner.
 
 ## License
 
