@@ -95,7 +95,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - Policy and risk library: 59 tests passed, including 12 execution-envelope validation cases.
 - API: 31 tests passed, including PostgreSQL integration and dependency-failure coverage.
 - Dashboard RPC adapter: 7 tests passed.
-- Combined verified automated test count: 134 passed, 0 failed. Latest combined policy/API/dashboard/container workflow [42627291482](https://github.com/Tajudeeen/outlay/actions/runs/42627291482) passed. This includes PostgreSQL integration, API dependency-failure, and risk-gate coverage.
+- Combined verified automated test count: 134 passed, 0 failed. Latest combined policy/API/dashboard/container workflow [42627315036](https://github.com/Tajudeeen/outlay/actions/runs/42627315036) passed. This includes PostgreSQL integration, API dependency-failure, and risk-gate coverage.
 - PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
 - API container: non-root image build and runtime `/health` check passed against PostgreSQL in CI.
 - Latest API concurrency workflow: [run 42590845687](https://github.com/Tajudeeen/outlay/actions/runs/42590845687), successful.
