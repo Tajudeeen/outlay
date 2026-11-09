@@ -134,6 +134,7 @@ describe("Outlay API handler", () => {
     chain = { async getAgentSnapshot() { reads += 1; return chainSnapshot; } };
     handler = createApiHandler({
       store, chain, contractId: "outlay-deployer.testnet", adminToken: "a".repeat(48),
+      rateLimitPerMinute: 1,
       nowNs: () => "1794205682689443397",
       nowDate: () => new Date("2026-11-09T08:00:00.000Z"),
     });
@@ -151,6 +152,7 @@ describe("Outlay API handler", () => {
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
     expect(reads).toBe(1);
+    expect(store.limits.get("outlay-agent.testnet:29469600")).toBe(1);
   });
 
   it("rejects idempotency-key reuse with a different payload", async () => {
