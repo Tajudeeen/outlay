@@ -104,6 +104,10 @@ export class PgOutlayStore implements OutlayStore {
   }
 
   async consumeRateLimit(agentId: string, windowStart: number, limit: number): Promise<boolean> {
+    // Opportunistic daily cleanup keeps fixed-window counters bounded.
+    if (windowStart % 1440 === 0) {
+      await this.pool.query("DELETE FROM agent_rate_limits WHERE window_start < $1", [windowStart - 1440]);
+    }
     const result = await this.pool.query<{ request_count: number }>(
       `INSERT INTO agent_rate_limits (agent_id, window_start, request_count)
        VALUES ($1, $2, 1)
@@ -139,6 +143,7 @@ export class PgOutlayStore implements OutlayStore {
     response: unknown,
     expiresAt: Date,
   ): Promise<boolean> {
+    await this.pool.query("DELETE FROM idempotency_records WHERE expires_at <= NOW()");
     const result = await this.pool.query(
       `INSERT INTO idempotency_records
        (agent_id, idempotency_key, request_hash, response_status, response_json, expires_at)
