@@ -6,6 +6,7 @@ on:
       - "package.json"
       - "pnpm-workspace.yaml"
       - "services/**"
+      - "apps/**"
       - ".github/workflows/typescript.yml"
   pull_request:
     paths:
@@ -29,5 +30,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
       - name: Typecheck
         run: pnpm --filter @outlay/policy typecheck
-      - name: Test
+      - name: Test policy service
         run: pnpm --filter @outlay/policy test
+      - name: Test dashboard RPC adapter
+        run: pnpm --filter @outlay/dashboard test
