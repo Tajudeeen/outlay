@@ -7,7 +7,8 @@ This crate contains the first NEAR authorization contract.
 - Owner configures policies and registers agents.
 - Each agent is bound to one policy.
 - Authorization checks agent status, policy status, expiry, destination allowlist, per-transaction limit, total budget, nonce replay, and duplicate intent IDs.
-- Successful authorization atomically reserves policy budget and stores a decision record. Intent IDs are unique per agent and remain consumed even if an expired reservation is released.\n- Every policy update increments a monotonic version, and each decision records the version it evaluated.\n- The owner can release a reservation only after its intent expiry. The consumed nonce remains consumed.
+- Successful authorization atomically reserves policy budget and stores a decision record. Intent IDs are unique per agent and remain consumed even if an expired reservation is released.
+- Every policy update increments a monotonic version, and each decision records the version it evaluated.\n- The owner can release a reservation only after its intent expiry. The consumed nonce remains consumed.
 
 ## Critical limitation
 
