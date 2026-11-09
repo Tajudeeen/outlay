@@ -322,7 +322,7 @@ mod tests {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
         contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 60, 1, 500);
-        contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 41, 2, 500);
+        contract.authorize_spend("intent-2".into(), account("merchant.testnet"), 41, 2, 500);
     }
 
     #[test]
