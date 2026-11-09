@@ -23,7 +23,7 @@ Shared runtime schemas for untrusted agent spending intents and lifecycle record
 - `evaluateRisk` validates signal schema, trusted source IDs, evidence hashes, freshness windows, and required signal categories.
 - Missing, stale, future-dated, duplicate, contradictory, or untrusted signals fail closed.
 - A signal may clear, request review, or deny. The evaluator cannot authorize a spend.
-- The risk evaluator is a tested library primitive. It is not yet connected to a live external risk provider or the API route. Provider public keys and source operations still need configuration. Do not claim live reputation or anomaly detection until trusted providers are integrated.
+- The risk evaluator is a tested library primitive. The API accepts an optional trusted server-side evaluator dependency and fails closed when risk is required but unavailable, or when a configured evaluator errors. No live external provider is configured yet. Provider public keys and source operations still need configuration. Do not claim live reputation or anomaly detection until trusted providers are integrated.
 
 ## Pre-sign execution envelope validator
 
