@@ -6,10 +6,12 @@ export type ChainSnapshot = {
   policy: PolicySnapshot | null;
   blockHeight: number;
   blockHash: string;
+  nonceConsumed: boolean;
+  intentConsumed: boolean;
 };
 
 export interface NearReader {
-  getAgentSnapshot(contractId: string, agentId: string): Promise<ChainSnapshot>;
+  getAgentSnapshot(contractId: string, agentId: string, intentId: string, nonce: string): Promise<ChainSnapshot>;
 }
 
 type RpcEnvelope = {
@@ -35,7 +37,7 @@ export class NearRpcReader implements NearReader {
     }
   }
 
-  async getAgentSnapshot(contractId: string, agentId: string): Promise<ChainSnapshot> {
+  async getAgentSnapshot(contractId: string, agentId: string, intentId: string, nonce: string): Promise<ChainSnapshot> {
     if (!accountIdPattern.test(contractId) || !accountIdPattern.test(agentId)) {
       throw new Error("INVALID_NEAR_ACCOUNT_ID");
     }
@@ -48,13 +50,17 @@ export class NearRpcReader implements NearReader {
         policy: null,
         blockHeight: grantResult.blockHeight,
         blockHash: grantResult.blockHash,
+        nonceConsumed: false,
+        intentConsumed: false,
       };
     }
 
-    const [policyResult, versionResult, spendResult] = await Promise.all([
+    const [policyResult, versionResult, spendResult, nonceResult, intentResult] = await Promise.all([
       this.callView(contractId, "get_policy", { policy_id: grant.policy_id }, grantResult.blockHash),
       this.callView(contractId, "get_policy_version", { policy_id: grant.policy_id }, grantResult.blockHash),
       this.callView(contractId, "get_policy_spend", { policy_id: grant.policy_id }, grantResult.blockHash),
+      this.callView(contractId, "is_nonce_consumed", { agent_id: agentId, nonce }, grantResult.blockHash),
+      this.callView(contractId, "is_intent_consumed", { agent_id: agentId, intent_id: intentId }, grantResult.blockHash),
     ]);
 
     if (
@@ -64,6 +70,10 @@ export class NearRpcReader implements NearReader {
       || policyResult.blockHeight !== grantResult.blockHeight
       || versionResult.blockHeight !== grantResult.blockHeight
       || spendResult.blockHeight !== grantResult.blockHeight
+      || nonceResult.blockHash !== grantResult.blockHash
+      || intentResult.blockHash !== grantResult.blockHash
+      || nonceResult.blockHeight !== grantResult.blockHeight
+      || intentResult.blockHeight !== grantResult.blockHeight
     ) {
       throw new Error("INCONSISTENT_NEAR_SNAPSHOT");
     }
@@ -102,6 +112,8 @@ export class NearRpcReader implements NearReader {
       policy,
       blockHeight: grantResult.blockHeight,
       blockHash: grantResult.blockHash,
+      nonceConsumed: typeof nonceResult.value === "boolean" ? nonceResult.value : (() => { throw new Error("INVALID_NONCE_REPLAY_VIEW"); })(),
+      intentConsumed: typeof intentResult.value === "boolean" ? intentResult.value : (() => { throw new Error("INVALID_INTENT_REPLAY_VIEW"); })(),
     };
   }
 
