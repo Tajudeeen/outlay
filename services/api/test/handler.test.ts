@@ -229,6 +229,37 @@ describe("Outlay API handler", () => {
     expect([...store.credentials.values()].some((item) => item.keyHash === body.apiKey)).toBe(false);
   });
 
+  it("revokes all active agent keys through the admin route", async () => {
+    const response = await request("/v1/admin/agent-keys/revoke", {
+      method: "POST",
+      headers: { "x-outlay-admin-token": "a".repeat(48), "content-type": "application/json" },
+      body: JSON.stringify({ agentId: "outlay-agent.testnet" }),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ agentId: "outlay-agent.testnet", revoked: 1 });
+    expect([...store.credentials.values()].every((item) => !item.enabled)).toBe(true);
+  });
+
+  it("fails closed when the chain snapshot is unavailable", async () => {
+    chain = { async getAgentSnapshot() { throw new Error("rpc unavailable"); } };
+    handler = createApiHandler({
+      store, chain, contractId: "outlay-deployer.testnet", adminToken: "a".repeat(48),
+      nowNs: () => "1794205682689443397",
+      nowDate: () => new Date("2026-11-09T08:00:00.000Z"),
+    });
+    const response = await request("/v1/intents/preflight", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + apiKey,
+        "content-type": "application/json",
+        "idempotency-key": "api-intent-0010",
+      },
+      body: JSON.stringify({ ...validIntent, intentId: "api-intent-0010" }),
+    });
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({ error: "CHAIN_SNAPSHOT_UNAVAILABLE", authorized: false });
+  });
+
   it("rejects admin key issuance without the admin token", async () => {
     const response = await request("/v1/admin/agent-keys", {
       method: "POST",
