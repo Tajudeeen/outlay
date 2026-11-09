@@ -50,6 +50,41 @@ export type RiskEvaluation =
   | { decision: "review"; reasonCode: "RISK_SIGNAL_REVIEW"; signalIds: string[] }
   | { decision: "deny"; reasonCode: string; signalIds: string[] };
 
+export type ContractGate = {
+  allowed: boolean;
+  reasonCode?: string;
+};
+
+export type CombinedRiskGate =
+  | { allowed: true; authority: "risk_gate"; reasonCode: "RISK_CLEAR" }
+  | { allowed: false; authority: "contract" | "risk_gate"; reasonCode: string };
+
+/**
+ * Combines the advisory risk result with the authoritative contract preflight.
+ * A contract denial always wins, even when every risk signal is clear.
+ * Risk can add a denial or review hold, but it can never grant contract authority.
+ */
+export function combineContractAndRisk(
+  contract: ContractGate,
+  risk: RiskEvaluation,
+): CombinedRiskGate {
+  if (!contract.allowed) {
+    return {
+      allowed: false,
+      authority: "contract",
+      reasonCode: contract.reasonCode ?? "CONTRACT_POLICY_DENIED",
+    };
+  }
+  if (risk.decision !== "clear") {
+    return {
+      allowed: false,
+      authority: "risk_gate",
+      reasonCode: risk.reasonCode,
+    };
+  }
+  return { allowed: true, authority: "risk_gate", reasonCode: "RISK_CLEAR" };
+}
+
 /**
  * Deterministic risk gate over signals from explicitly trusted sources.
  * Caller-provided evidence is not trusted merely because it matches this schema.
@@ -121,7 +156,7 @@ export function evaluateRisk(
     byCategory.set(signal.category, current);
   }
 
-  for (const [category, categorySignals] of byCategory) {
+  for (const [, categorySignals] of byCategory) {
     if (categorySignals.length > 1) {
       const dispositions = new Set(categorySignals.map((signal) => signal.disposition));
       if (dispositions.size > 1) {
