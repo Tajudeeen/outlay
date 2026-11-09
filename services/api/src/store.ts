@@ -43,6 +43,8 @@ export class PgOutlayStore implements OutlayStore {
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
+      // Serialize issuance and rotation per agent. The transaction lock is released on commit/rollback.
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [agentId]);
       const active = await client.query<{ count: string }>(
         "SELECT COUNT(*)::text AS count FROM agent_credentials WHERE agent_id = $1 AND enabled = TRUE",
         [agentId],
@@ -83,6 +85,7 @@ export class PgOutlayStore implements OutlayStore {
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [agentId]);
       const result = await client.query<{ key_hash: string }>(
         "UPDATE agent_credentials SET enabled = FALSE, revoked_at = NOW() WHERE agent_id = $1 AND enabled = TRUE RETURNING key_hash",
         [agentId],
