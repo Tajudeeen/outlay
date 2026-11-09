@@ -12,11 +12,13 @@ Put a deterministic authorization boundary between autonomous agents and spendin
 - Is treated as compromised by default.
 
 ### 2. API and intent normalization
-- Authenticates the caller.
-- Validates schema and size limits.
-- Resolves agent identity and policy reference.
+- Authenticates the caller using a digest-only credential record.
+- Validates strict intent schema, JSON size, identity binding, and idempotency key.
+- Reads the agent grant and policy snapshot from one pinned finalized NEAR block.
+- Applies fixed-window request limits and deterministic advisory preflight.
+- Persists key lifecycle audit events and idempotent responses in PostgreSQL.
 - Produces a canonical intent representation.
-- Does not make final authorization decisions.
+- Does not make final authorization decisions or sign transactions.
 
 ### 3. Policy contract (NEAR, Rust)
 - Stores agent registrations, policy scopes, budget state, and replay protection.
