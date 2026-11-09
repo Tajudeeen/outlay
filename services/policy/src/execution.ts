@@ -52,21 +52,23 @@ export const ExecutionEnvelopeSchema = z.object({
 
 export type ExecutionEnvelope = z.infer<typeof ExecutionEnvelopeSchema>;
 
-export type VerifiedAuthorization = {
-  decisionId: string;
-  intentId: string;
-  policyId: string;
-  policyVersion: string;
-  agentId: string;
-  nonce: string;
-  destination: string;
-  amount: string;
-  expiresAtNs: string;
-  blockHeight: string;
-  blockHash: string;
-  active: boolean;
-  released: boolean;
-};
+export const VerifiedAuthorizationSchema = z.object({
+  decisionId: identifier,
+  intentId: identifier,
+  policyId: identifier,
+  policyVersion: positiveDecimal,
+  agentId: accountId,
+  nonce: u64,
+  destination: accountId,
+  amount: u128,
+  expiresAtNs: u64,
+  blockHeight: u64,
+  blockHash: hash,
+  active: z.boolean(),
+  released: z.boolean(),
+}).strict();
+
+export type VerifiedAuthorization = z.infer<typeof VerifiedAuthorizationSchema>;
 
 export type EnvelopeValidation =
   | { valid: true; envelope: ExecutionEnvelope; envelopeHash: string }
@@ -96,7 +98,7 @@ export function validateExecutionEnvelope(input: {
     return fail("NETWORK_MISMATCH");
   }
 
-  const auth = authorizationResult.data;
+  const authorizationResult = VerifiedAuthorizationSchema.safeParse(input.authorization);\n  if (!authorizationResult.success) return fail("AUTHORIZATION_EVIDENCE_INVALID");\n  const auth = authorizationResult.data;
   if (!auth.active) return fail("AUTHORIZATION_INACTIVE");
   if (auth.released) return fail("RESERVATION_RELEASED");
 
