@@ -43,6 +43,16 @@ near contract deploy <outlay-contract.testnet> \
 
 The initializer sets the contract owner to the account that signs the deployment transaction. Use the dedicated contract account so that policy administration is controlled by that account.
 
+## Upgrade an already initialized testnet contract
+
+For a code-only upgrade where the contract state layout is unchanged, deploy the new WASM without calling `new` again. Re-running the initializer is not part of an upgrade and may fail or reset assumptions. Confirm state before and after the code deployment.
+
+```powershell
+near contract deploy <outlay-deployer.testnet> use-file <path-to-outlay_contract.wasm> network-config testnet sign-with-keychain send
+```
+
+Do not use `with-init-call new` for a code-only upgrade.
+
 ## Verify
 
 1. Confirm the deploy transaction reached final success.
