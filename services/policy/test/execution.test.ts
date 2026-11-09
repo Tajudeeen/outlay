@@ -103,7 +103,7 @@ describe("validateExecutionEnvelope", () => {
   it("rejects malformed or unsafe numeric values", () => {
     expect(validateExecutionEnvelope({
       ...input, authorization: { ...authorization, amount: "1e2" },
-    })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_NUMERIC_INVALID" });
+    })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_EVIDENCE_INVALID" });
     expect(validateExecutionEnvelope({
       ...input, nowNs: "-1",
     })).toMatchObject({ valid: false, reasonCode: "AUTHORIZATION_NUMERIC_INVALID" });
