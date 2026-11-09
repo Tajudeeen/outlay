@@ -34,7 +34,7 @@ The API returns the number of credentials revoked. An append-only key-event reco
 ### Preflight an intent
 `POST /v1/intents/preflight`
 
-Requires `Authorization: Bearer outlay_agent_...` and an `Idempotency-Key` header containing 8-128 safe characters. The body follows the strict `SpendIntentSchema`.
+Requires `Authorization: Bearer outlay_agent_...` and an `Idempotency-Key` header containing 8-128 safe characters. The body follows the strict `SpendIntentSchema`. The only accepted asset marker is `policy-unit`, which represents abstract integer policy units. Amounts are not token denominations or payment amounts.
 
 The API resolves the agent from the credential, checks the identity matches the intent, reads finalized grant/policy/version/reserved-budget state from NEAR testnet, and runs deterministic BigInt preflight checks. Requests are limited to 60 per agent per minute by default. Idempotency results are retained for 24 hours.
 
