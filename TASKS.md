@@ -18,7 +18,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Implement atomic budget reservation accounting.
 - [x] Add nonce/replay protection and intent/policy expiry.
 - [x] Emit structured authorization and reservation-release events.
-- [x] Add 16 contract unit tests covering authorization, ownership, replay, budget limits, policy versions, and reservation lifecycle.
+- [x] Add 23 contract unit tests covering authorization, ownership, replay, budget limits, policy versions, and reservation lifecycle.
 - [x] Cover unauthorized callers, invalid identifiers, replay, and expiry denial paths in contract tests.
 
 ## Milestone 2: intent API and policy service
@@ -46,15 +46,19 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 
 ## Milestone 5: adversarial harness
 - [ ] Budget race and overspend attempts.
-- [ ] Replay and expired-intent attacks.
-- [ ] Agent scope escalation.
-- [ ] Destination/amount substitution.
-- [ ] Unauthorized policy mutation.
+- [x] Replay and expired-intent attacks in contract unit tests and testnet evidence.
+- [x] Agent scope enforcement for registered, disabled, and unknown callers.
+- [x] Destination and amount-limit denial paths.
+- [x] Unauthorized policy mutation rejected by owner checks.
 - [ ] Signer payload confusion.
-- [ ] Failure injection and fail-closed tests.
+- [x] Rejected authorization leaves budget and decision count unchanged in contract unit tests.
+- [x] Malformed policy snapshots fail closed in policy-service tests.
+- [ ] External dependency failure injection.
 
 ## Milestone 6: dashboard and evidence
-- [x] Read-only testnet views for policy, agent grant, and decision receipt (source and CI tests added, final browser RPC check pending).
+- [x] Read-only testnet views for policy, agent grant, and decision receipt (dashboard RPC adapter tests pass; browser RPC check pending).
+- [x] Clear testnet, read-only, and authorization-not-payment labels.
+- [x] Read-only on-chain decision receipt display.
 - [ ] Policy and agent management views.
 - [ ] Intent/decision timeline.
 - [ ] Receipt verification display.
