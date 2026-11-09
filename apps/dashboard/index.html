@@ -75,6 +75,12 @@
         <div><span>CUMULATIVE RESERVED</span><strong id="receipt-cumulative">--</strong></div>
         <div><span>NONCE</span><strong id="receipt-nonce">--</strong></div>
       </div>
+      <div class="verification">
+        <div class="verification-head"><span>RPC-READ CONSISTENCY CHECK</span><span id="verification-badge" class="badge">pending</span></div>
+        <p id="verification-summary">waiting for finalized receipt data</p>
+        <ul id="verification-checks"></ul>
+        <p class="hint">These checks compare fields returned by finalized contract views. They are not an independent cryptographic proof or settlement confirmation.</p>
+      </div>
       <details><summary>raw decision data</summary><pre id="decision-json">waiting…</pre></details>
     </section>
 
