@@ -39,6 +39,25 @@ describe.skipIf(!enabled)("PgOutlayStore integration", () => {
     expect(rows.rows[0]?.key_hash).toBe(digest);
   });
 
+  it("serializes concurrent first-time key issuance for one agent", async () => {
+    const results = await Promise.allSettled([
+      store.issueCredential(agentId, "1".repeat(64), false),
+      store.issueCredential(agentId, "2".repeat(64), false),
+    ]);
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+    const active = await pool.query(
+      "SELECT COUNT(*)::int AS count FROM agent_credentials WHERE agent_id = $1 AND enabled = TRUE",
+      [agentId],
+    );
+    expect(active.rows[0]?.count).toBe(1);
+    const events = await pool.query(
+      "SELECT COUNT(*)::int AS count FROM agent_key_events WHERE agent_id = $1",
+      [agentId],
+    );
+    expect(events.rows[0]?.count).toBe(1);
+  });
+
   it("requires explicit rotation and revokes previous credentials atomically", async () => {
     const oldDigest = "b".repeat(64);
     const newDigest = "c".repeat(64);
