@@ -23,7 +23,8 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 
 ## Milestone 2: intent API and policy service
 - [x] TypeScript strict intent schema and decimal-string boundaries.
-- [x] Agent key issuance, digest-only storage interface, and bearer authentication module.\n- [ ] Persistent credential store, key revocation/rotation, rate limiting, and agent-to-policy mapping.
+- [x] Agent key issuance, digest-only storage interface, and bearer authentication module.
+- [ ] Persistent credential store, key revocation/rotation, rate limiting, and agent-to-policy mapping.
 - [ ] Idempotency and request limits.
 - [ ] API integration tests against contract behavior.
 - [x] Deterministic fail-closed preflight evaluator and unit cases.
