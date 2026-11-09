@@ -11,7 +11,11 @@ export type RiskCategory = z.infer<typeof RiskCategorySchema>;
 export const RiskDispositionSchema = z.enum(["clear", "review", "deny"]);
 export type RiskDisposition = z.infer<typeof RiskDispositionSchema>;
 
-const uint = z.string().regex(/^(0|[1-9][0-9]*)$/);
+const U64_MAX = 18_446_744_073_709_551_615n;
+const uint = z.string().regex(/^(0|[1-9][0-9]*)$/).refine((value) => {
+  try { return BigInt(value) <= U64_MAX; }
+  catch { return false; }
+});
 
 export const RiskSignalSchema = z.object({
   signalId: z.string().min(1).max(128).regex(/^[A-Za-z0-9._-]+$/),
@@ -85,9 +89,6 @@ export function evaluateRisk(
         return { decision: "deny", reasonCode: "RISK_SIGNAL_CONFLICT", signalIds: ids };
       }
       return { decision: "deny", reasonCode: "RISK_SIGNAL_DUPLICATE", signalIds: ids };
-    }
-    if (!requiredCategories.includes(category) && categorySignals.length === 0) {
-      return { decision: "deny", reasonCode: "RISK_SIGNAL_INVALID_CATEGORY", signalIds: ids };
     }
   }
 
