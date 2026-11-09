@@ -34,4 +34,13 @@ describe("authenticateAgent", () => {
     };
     await expect(authenticateAgent(`Bearer ${issued.secret}`, store)).resolves.toBeNull();
   });
+
+  it("fails closed when the credential store is unavailable", async () => {
+    const issued = issueAgentKey();
+    const store: AgentCredentialStore = {
+      async findByKeyHash() { throw new Error("database unavailable"); },
+    };
+    await expect(authenticateAgent(`Bearer ${issued.secret}`, store)).resolves.toBeNull();
+  });
+
 });
