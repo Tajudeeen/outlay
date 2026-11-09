@@ -22,8 +22,9 @@ The dashboard calls finalized NEAR JSON-RPC view methods:
 - `get_policy_spend`
 - `get_agent_grant`
 - `get_decision`
+- `is_reservation_released`
 
-The RPC adapter preserves integer values as strings so u64/u128 amounts and timestamps are not rounded by JavaScript's Number type.
+The RPC adapter preserves integer values as strings so u64/u128 amounts and timestamps are not rounded by JavaScript's Number type. The selected receipt also shows whether its budget reservation is still reserved or has been released, using a view pinned to the same finalized block.
 
 ## Security boundary
 
