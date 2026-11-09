@@ -308,7 +308,7 @@ mod tests {
     fn policy_id_rejects_unsafe_event_characters() {
         let mut contract = setup();
         context(account("owner.testnet"), 30);
-        contract.set_policy("bad\\"id".into(), Policy {
+        contract.set_policy("bad/id".into(), Policy {
             enabled: true,
             expires_at_ns: 1_000,
             max_per_transaction: 60,
