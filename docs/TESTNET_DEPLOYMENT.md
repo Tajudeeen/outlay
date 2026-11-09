@@ -73,3 +73,54 @@ Do not configure policies or register production agents until the deployment has
 - No signer or Chain Signatures adapter is connected.
 - Reservation release is owner-triggered and is only safe while no execution adapter can create a still-valid transaction. Do not add signing or execution until this lifecycle is redesigned and reviewed.
 - Testnet success is not a security audit and does not justify production funds.
+
+## Exact next steps for the existing Outlay testnet account
+
+The current live state is the smoke-test baseline:
+- Contract: `outlay-deployer.testnet`
+- Agent: `outlay-agent.testnet`
+- Policy: `smoke-test`
+- Reserved budget: `25`
+- Decision count: `1`
+- Policy version: `1`
+- Consumed nonce: `1`
+- Consumed intent: `smoke-intent-001`
+
+Download the latest successful [contract workflow artifact](https://github.com/Tajudeeen/outlay/actions/runs/42589273821), named `outlay-contract-wasm`, and extract it to:
+
+`$HOME\Downloads\outlay-contract-wasm\outlay_contract.wasm`
+
+In Windows PowerShell, verify the artifact hash, then perform the code-only upgrade:
+
+```powershell
+Get-FileHash "$HOME\Downloads\outlay-contract-wasm\outlay_contract.wasm" -Algorithm SHA256
+
+near contract deploy outlay-deployer.testnet use-file "$HOME\Downloads\outlay-contract-wasm\outlay_contract.wasm" network-config testnet sign-with-keychain send
+```
+
+Do not include `with-init-call new`. The existing contract state must remain intact.
+
+Confirm the new replay views:
+
+```powershell
+near contract call-function as-read-only outlay-deployer.testnet is_nonce_consumed json-args '{\"agent_id\":\"outlay-agent.testnet\",\"nonce\":\"1\"}' network-config testnet now
+
+near contract call-function as-read-only outlay-deployer.testnet is_intent_consumed json-args '{\"agent_id\":\"outlay-agent.testnet\",\"intent_id\":\"smoke-intent-001\"}' network-config testnet now
+```
+
+Both should return `true`. Check unused values too, which should return `false`:
+
+```powershell
+near contract call-function as-read-only outlay-deployer.testnet is_nonce_consumed json-args '{\"agent_id\":\"outlay-agent.testnet\",\"nonce\":\"999\"}' network-config testnet now
+
+near contract call-function as-read-only outlay-deployer.testnet is_intent_consumed json-args '{\"agent_id\":\"outlay-agent.testnet\",\"intent_id\":\"smoke-intent-unused\"}' network-config testnet now
+```
+
+Then run the full live suite from the repository root:
+
+```powershell
+.\scripts\testnet-smoke.ps1
+.\scripts\testnet-smoke.ps1 -Execute
+```
+
+The script stops if the starting state differs from the baseline. Its only successful spend raises reserved budget from 25 to 75. Expected final state: reserved budget `75`, decision count `2`, policy version `3`. Failed calls pay testnet gas but must not mutate contract state.
