@@ -63,7 +63,8 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Intent/decision timeline.
 - [ ] Receipt verification display.
 - [ ] Clear labels for simulated, testnet, and verified execution.
-- [ ] End-to-end demo with real testnet evidence.
+- [x] Two-minute demo runbook with real testnet transaction evidence.
+- [ ] Record and review the end-to-end demo video.
 
 ## Release gates
 - No unresolved critical/high security findings.
