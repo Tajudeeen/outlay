@@ -288,4 +288,32 @@ mod tests {
         context(account("agent.testnet"), 30);
         contract.authorize_spend(account("merchant.testnet"), 10, 1, 500);
     }
+
+    #[test]
+    #[should_panic(expected = "OWNER_ONLY")]
+    fn non_owner_cannot_change_policy() {
+        let mut contract = setup();
+        context(account("attacker.testnet"), 30);
+        contract.set_policy("daily".into(), Policy {
+            enabled: true,
+            expires_at_ns: 1_000,
+            max_per_transaction: 60,
+            max_total: 100,
+            allowed_destinations: vec![account("merchant.testnet")],
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "POLICY_ID_INVALID")]
+    fn policy_id_rejects_unsafe_event_characters() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 30);
+        contract.set_policy("bad\\"id".into(), Policy {
+            enabled: true,
+            expires_at_ns: 1_000,
+            max_per_transaction: 60,
+            max_total: 100,
+            allowed_destinations: vec![account("merchant.testnet")],
+        });
+    }
 }
