@@ -1,6 +1,7 @@
 use near_sdk::{
-    env, near, require, AccountId, PanicOnDefault,
+    env, near, require,
     store::{LookupMap, LookupSet},
+    AccountId, PanicOnDefault,
 };
 
 #[near(serializers = [borsh, json])]
@@ -67,7 +68,10 @@ impl Outlay {
     pub fn set_policy(&mut self, policy_id: String, policy: Policy) {
         self.assert_owner();
         require!(!policy_id.is_empty(), "POLICY_ID_EMPTY");
-        require!(policy_id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.'), "POLICY_ID_INVALID");
+        require!(
+            policy_id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.'),
+            "POLICY_ID_INVALID"
+        );
         require!(policy.max_per_transaction > 0, "MAX_TX_ZERO");
         require!(policy.max_total >= policy.max_per_transaction, "INVALID_BUDGET");
         require!(!policy.allowed_destinations.is_empty(), "DESTINATIONS_EMPTY");
@@ -78,12 +82,22 @@ impl Outlay {
     pub fn register_agent(&mut self, agent_id: AccountId, policy_id: String) {
         self.assert_owner();
         require!(self.policies.get(&policy_id).is_some(), "POLICY_NOT_FOUND");
-        self.grants.insert(agent_id, AgentGrant { policy_id, enabled: true });
+        self.grants.insert(
+            agent_id,
+            AgentGrant {
+                policy_id,
+                enabled: true,
+            },
+        );
     }
 
     pub fn set_agent_enabled(&mut self, agent_id: AccountId, enabled: bool) {
         self.assert_owner();
-        let mut grant = self.grants.get(&agent_id).cloned().expect("AGENT_NOT_FOUND");
+        let mut grant = self
+            .grants
+            .get(&agent_id)
+            .cloned()
+            .expect("AGENT_NOT_FOUND");
         grant.enabled = enabled;
         self.grants.insert(agent_id, grant);
     }
@@ -101,10 +115,18 @@ impl Outlay {
         let now = env::block_timestamp();
         require!(amount > 0, "AMOUNT_ZERO");
 
-        let grant = self.grants.get(&agent_id).cloned().expect("AGENT_NOT_REGISTERED");
+        let grant = self
+            .grants
+            .get(&agent_id)
+            .cloned()
+            .expect("AGENT_NOT_REGISTERED");
         require!(grant.enabled, "AGENT_DISABLED");
 
-        let policy = self.policies.get(&grant.policy_id).cloned().expect("POLICY_NOT_FOUND");
+        let policy = self
+            .policies
+            .get(&grant.policy_id)
+            .cloned()
+            .expect("POLICY_NOT_FOUND");
         require!(policy.enabled, "POLICY_DISABLED");
         require!(now < policy.expires_at_ns, "POLICY_EXPIRED");
         require!(now < intent_expires_at_ns, "INTENT_EXPIRED");
@@ -115,14 +137,23 @@ impl Outlay {
         let nonce_key = format!("{}:{}", agent_id, nonce);
         require!(!self.consumed_nonces.contains(&nonce_key), "NONCE_REPLAY");
 
-        let spent = self.spend_by_policy.get(&grant.policy_id).copied().unwrap_or(0);
+        let spent = self
+            .spend_by_policy
+            .get(&grant.policy_id)
+            .copied()
+            .unwrap_or(0);
         let next_spend = spent.checked_add(amount).expect("SPEND_OVERFLOW");
         require!(next_spend <= policy.max_total, "BUDGET_EXCEEDED");
 
         // State changes occur only after all validation checks pass.
         self.consumed_nonces.insert(nonce_key);
-        self.spend_by_policy.insert(grant.policy_id.clone(), next_spend);
-        self.decision_count = self.decision_count.checked_add(1).expect("DECISION_COUNT_OVERFLOW");
+        self
+            .spend_by_policy
+            .insert(grant.policy_id.clone(), next_spend);
+        self.decision_count = self
+            .decision_count
+            .checked_add(1)
+            .expect("DECISION_COUNT_OVERFLOW");
 
         let decision_id = format!("outlay:{}:{}", env::block_height(), self.decision_count);
         let decision = SpendDecision {
