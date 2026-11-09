@@ -67,6 +67,7 @@ impl Outlay {
     pub fn set_policy(&mut self, policy_id: String, policy: Policy) {
         self.assert_owner();
         require!(!policy_id.is_empty(), "POLICY_ID_EMPTY");
+        require!(policy_id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.'), "POLICY_ID_INVALID");
         require!(policy.max_per_transaction > 0, "MAX_TX_ZERO");
         require!(policy.max_total >= policy.max_per_transaction, "INVALID_BUDGET");
         require!(!policy.allowed_destinations.is_empty(), "DESTINATIONS_EMPTY");
