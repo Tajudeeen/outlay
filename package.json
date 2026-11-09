@@ -1,0 +1,10 @@
+{
+  "name": "outlay",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.10.0",
+  "scripts": {
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  }
+}
