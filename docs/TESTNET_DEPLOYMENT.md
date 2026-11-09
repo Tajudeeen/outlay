@@ -86,7 +86,7 @@ The current live state is the smoke-test baseline:
 - Consumed nonce: `1`
 - Consumed intent: `smoke-intent-001`
 
-Download the latest successful [contract workflow artifact](https://github.com/Tajudeeen/outlay/actions/runs/42589273821), named `outlay-contract-wasm`, and extract it to:
+Download the latest successful [contract workflow artifact](https://github.com/Tajudeeen/outlay/actions/runs/42613038594), named `outlay-contract-wasm`, built from contract commit `749d202082c72559f9357381a9894891d772708c`. The GitHub artifact archive digest is `sha256:c7299466e4631d2f2abfc4986bfff50b4ac35c854e7f3481d3c5a124e59a52d4`. This is the archive digest, not the extracted WASM digest. Extract it to:
 
 `$HOME\Downloads\outlay-contract-wasm\outlay_contract.wasm`
 
