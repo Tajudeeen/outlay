@@ -1,11 +1,13 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import {
   authenticateAgent,
+  combineContractAndRisk,
   evaluatePreflight,
   issueAgentKey,
   parseSpendIntent,
 } from "@outlay/policy";
-import type { NearReader } from "./near-client.js";
+import type { RiskEvaluation, SpendIntent, PreflightResult } from "@outlay/policy";
+import type { ChainSnapshot, NearReader } from "./near-client.js";
 import type { OutlayStore } from "./store.js";
 
 const MAX_BODY_BYTES = 16 * 1024;
@@ -21,6 +23,8 @@ type ApiDependencies = {
   rateLimitPerMinute?: number;
   nowNs?: () => string;
   nowDate?: () => Date;
+  riskEvaluator?: (intent: SpendIntent, snapshot: ChainSnapshot) => Promise<RiskEvaluation>;
+  requireRisk?: boolean;
 };
 
 function json(status: number, body: unknown, extraHeaders: Record<string, string> = {}): Response {
@@ -188,11 +192,32 @@ export function createApiHandler(deps: ApiDependencies): (request: Request) => P
         return json(503, { error: "CHAIN_SNAPSHOT_UNAVAILABLE", authorized: false });
       }
 
-      const result = snapshot.nonceConsumed
-        ? { allowed: false as const, reasonCode: "NONCE_REPLAY" }
+      let result: PreflightResult = snapshot.nonceConsumed
+        ? { allowed: false, reasonCode: "NONCE_REPLAY" }
         : snapshot.intentConsumed
-          ? { allowed: false as const, reasonCode: "INTENT_REPLAY" }
+          ? { allowed: false, reasonCode: "INTENT_REPLAY" }
           : evaluatePreflight(intent, snapshot.agent, snapshot.policy, nowNs());
+
+      let riskStatus = result.allowed ? "not_configured" : "skipped_contract_denial";
+      let riskReasonCode: string | undefined;
+      if (result.allowed && !deps.riskEvaluator && deps.requireRisk) {
+        result = { allowed: false, reasonCode: "RISK_PROVIDER_UNAVAILABLE" };
+        riskStatus = "unavailable";
+        riskReasonCode = "RISK_PROVIDER_UNAVAILABLE";
+      } else if (result.allowed && deps.riskEvaluator) {
+        try {
+          const risk = await deps.riskEvaluator(intent, snapshot);
+          const combined = combineContractAndRisk(result, risk);
+          riskStatus = risk.decision;
+          riskReasonCode = risk.reasonCode;
+          if (!combined.allowed) result = { allowed: false, reasonCode: combined.reasonCode };
+        } catch {
+          result = { allowed: false, reasonCode: "RISK_PROVIDER_UNAVAILABLE" };
+          riskStatus = "unavailable";
+          riskReasonCode = "RISK_PROVIDER_UNAVAILABLE";
+        }
+      }
+
       const response = {
         intentId: intent.intentId,
         agentId: intent.agentId,
@@ -201,6 +226,7 @@ export function createApiHandler(deps: ApiDependencies): (request: Request) => P
         authorized: false,
         authority: "near_contract",
         reasonCode: result.reasonCode,
+        risk: { status: riskStatus, ...(riskReasonCode ? { reasonCode: riskReasonCode } : {}) },
         ...(result.allowed ? { remainingBudget: result.remainingBudget } : {}),
         observedAtNs: nowNs(),
         chain: { blockHeight: snapshot.blockHeight, blockHash: snapshot.blockHash },
