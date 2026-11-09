@@ -140,6 +140,24 @@ Invoke-NearTransaction "authorize_spend" @{
   intent_expires_at_ns = [long]1900000000000000000
 } $AgentAccount $false "valid 50-unit authorization"
 
+# Exceed the per-transaction cap.
+Invoke-NearTransaction "authorize_spend" @{
+  intent_id = "smoke-per-tx-overflow-001"
+  destination = $AgentAccount
+  amount = 51
+  nonce = 20
+  intent_expires_at_ns = [long]1900000000000000000
+} $AgentAccount $true "per-transaction limit"
+
+# Destination is not in the policy allowlist.
+Invoke-NearTransaction "authorize_spend" @{
+  intent_id = "smoke-destination-denied-001"
+  destination = "unauthorized.testnet"
+  amount = 10
+  nonce = 21
+  intent_expires_at_ns = [long]1900000000000000000
+} $AgentAccount $true "destination allowlist"
+
 # Within the per-transaction cap, but over the remaining total budget.
 Invoke-NearTransaction "authorize_spend" @{
   intent_id = "smoke-total-overflow-001"
