@@ -32,7 +32,7 @@ const positiveU128 = u128.refine((v) => BigInt(v) > 0n);
 const hash = z.string().regex(/^[0-9a-f]{64}$/);
 
 export const AssetMappingSchema = z.object({
-  assetId: identifier,
+  assetId: identifier.refine((value) => value !== "policy-unit"),
   network: z.literal("near-testnet"),
   decimals: z.number().int().min(0).max(24),
   baseUnitsNumerator: positiveU128,
