@@ -17,7 +17,7 @@ Open https://outlay-dashboard.vercel.app. The dashboard is read-only and queries
 
 ### 0:15-0:35 - Live contract state
 
-Open the dashboard and refresh. Show the finalized NEAR testnet connection, policy, agent grant, and decision receipt. Point out the displayed block height and full block hash. All views are pinned to that same finalized block, making the snapshot reproducible. The dashboard does not submit transactions.
+Open the dashboard and refresh. Show the finalized NEAR testnet connection, policy, agent grant, and decision receipt. Point out the displayed block height and full block hash. All views are pinned to that same finalized block, making the snapshot reproducible. Point out the lifecycle strip: authorization is on-chain, execution is not implemented, settlement is not claimed, and execution verification is unavailable. The dashboard does not submit transactions.
 
 ### 0:35-0:55 - Policy boundary
 
@@ -36,6 +36,9 @@ Open the failed over-limit and unlisted-destination transactions. Then show the 
 "Outlay currently enforces authorization and reserves policy budget on-chain. It does not sign transactions, transfer tokens, or claim settlement. The dashboard is read-only. Execution integration remains a separate security milestone."
 
 ## Evidence links
+
+- Latest policy/API/dashboard/container CI: https://github.com/Tajudeeen/outlay/actions/runs/42627291482
+- Latest contract CI: https://github.com/Tajudeeen/outlay/actions/runs/42613038594
 
 - Policy creation: https://explorer.testnet.near.org/transactions/C6niQsAExNooj3UEdxS7QiEcveTdemxf75YNqyqwi46q
 - Agent registration: https://explorer.testnet.near.org/transactions/2tgPt6UzBxgyTJUE8UiizCkuUpRpy7VY78jhEUUuVoeM
