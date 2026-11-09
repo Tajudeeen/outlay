@@ -47,6 +47,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 ## Milestone 5: adversarial harness
 - [ ] Budget race and overspend attempts.
 - [x] Nonce and intent replay attacks in contract unit tests and testnet evidence.
+- [x] Read-only consumed nonce/intent views for advisory preflight, with contract checks remaining authoritative.
 - [x] Expired-intent and policy-expiry denial paths in contract unit tests.
 - [x] Agent scope enforcement for registered, disabled, and unknown callers.
 - [x] Destination and amount-limit denial paths.
