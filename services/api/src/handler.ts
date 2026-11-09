@@ -92,7 +92,7 @@ export function createApiHandler(deps: ApiDependencies): (request: Request) => P
         return json(400, { error: "INVALID_AGENT_KEY_REQUEST" });
       }
       try {
-        const snapshot = await deps.chain.getAgentSnapshot(deps.contractId, record.agentId);
+        const snapshot = await deps.chain.getAgentSnapshot(deps.contractId, record.agentId, "", "0");
         if (!snapshot.agent || !snapshot.agent.enabled) return json(409, { error: "AGENT_NOT_ENABLED_ON_CHAIN" });
         const issued = issueAgentKey();
         await deps.store.issueCredential(record.agentId, issued.keyHash, record.rotate === true);
@@ -174,12 +174,16 @@ export function createApiHandler(deps: ApiDependencies): (request: Request) => P
       }
 
       let snapshot;
-      try { snapshot = await deps.chain.getAgentSnapshot(deps.contractId, identity.agentId); }
+      try { snapshot = await deps.chain.getAgentSnapshot(deps.contractId, identity.agentId, intent.intentId, intent.nonce); }
       catch {
         return json(503, { error: "CHAIN_SNAPSHOT_UNAVAILABLE", authorized: false });
       }
 
-      const result = evaluatePreflight(intent, snapshot.agent, snapshot.policy, nowNs());
+      const result = snapshot.nonceConsumed
+        ? { allowed: false as const, reasonCode: "NONCE_REPLAY" }
+        : snapshot.intentConsumed
+          ? { allowed: false as const, reasonCode: "INTENT_REPLAY" }
+          : evaluatePreflight(intent, snapshot.agent, snapshot.policy, nowNs());
       const response = {
         intentId: intent.intentId,
         agentId: intent.agentId,
