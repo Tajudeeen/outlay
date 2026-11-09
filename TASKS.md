@@ -69,6 +69,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Intent/decision timeline.
 - [x] Finalized contract receipt consistency checks in the dashboard, clearly labeled as non-cryptographic.
 - [x] Label on-chain authorization, unimplemented execution, unclaimed settlement, and unavailable execution verification separately.
+- [x] Show whether the selected decision reservation is still reserved or released, pinned to the same finalized block.
 - [x] Two-minute demo runbook with real testnet transaction evidence.
 - [ ] Record and review the end-to-end demo video.
 
@@ -94,8 +95,8 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - Rust contract: 37 tests passed (latest contract workflow [42613038594](https://github.com/Tajudeeen/outlay/actions/runs/42613038594) successful).
 - Policy and risk library: 59 tests passed, including 12 execution-envelope validation cases.
 - API: 31 tests passed, including PostgreSQL integration and dependency-failure coverage.
-- Dashboard RPC adapter: 7 tests passed.
-- Combined verified automated test count: 134 passed, 0 failed. Latest combined policy/API/dashboard/container workflow [42627315036](https://github.com/Tajudeeen/outlay/actions/runs/42627315036) passed. This includes PostgreSQL integration, API dependency-failure, and risk-gate coverage.
+- Dashboard RPC adapter: 8 tests passed, including finalized reservation lifecycle reads.
+- Combined verified automated test count: 135 passed, 0 failed. Latest combined policy/API/dashboard/container workflow [42641447603](https://github.com/Tajudeeen/outlay/actions/runs/42641447603) passed. This includes PostgreSQL integration, API dependency-failure, risk-gate, and finalized reservation-status coverage.
 - PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
 - API container: non-root image build and runtime `/health` check passed against PostgreSQL in CI.
 - Latest API concurrency workflow: [run 42590845687](https://github.com/Tajudeeen/outlay/actions/runs/42590845687), successful.
