@@ -47,7 +47,7 @@ const validIntent = {
   agentId: "outlay-agent.testnet",
   policyId: "smoke-test",
   network: "near-testnet",
-  assetId: "native-near",
+  assetId: "policy-unit",
   destination: "outlay-agent.testnet",
   amount: "25",
   nonce: "20",
