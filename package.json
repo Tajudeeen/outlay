@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "packageManager": "pnpm@10.10.0",
   "scripts": {
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
-    "build": "pnpm -r build"
+    "build": "pnpm --filter @outlay/policy build && pnpm --filter @outlay/api build",
+    "typecheck": "pnpm --filter @outlay/policy build && pnpm -r typecheck",
+    "test": "pnpm --filter @outlay/policy build && pnpm -r test"
   }
 }
