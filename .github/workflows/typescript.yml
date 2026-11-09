@@ -62,3 +62,5 @@ jobs:
         run: pnpm --filter @outlay/api test
       - name: Test dashboard RPC adapter
         run: pnpm --filter @outlay/dashboard test
+      - name: Build API container image
+        run: docker build -t outlay-api:ci .
