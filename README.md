@@ -8,7 +8,7 @@ Outlay is a security layer for autonomous agent spending. Agents may propose spe
 
 ## What we're building
 
-- **Policy enforcement:** budgets, scopes, destinations, expiry, and approval requirements.
+- **Policy enforcement:** budgets, scopes, destinations, expiry, and approval requirements.\n- **Agent authentication:** high-entropy bearer keys with digest-only storage and constant-time verification.
 - **Spending intents:** structured requests that can be validated independently of agent behavior.
 - **Decision receipts:** durable records of allow/deny outcomes and policy context.
 - **NEAR integration:** contract-enforced authorization, with Chain Signatures considered only behind strict payload validation.
@@ -35,7 +35,7 @@ Outlay is a security layer for autonomous agent spending. Agents may propose spe
 
 ## Development status
 
-See [TASKS.md](TASKS.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), and [SECURITY.md](SECURITY.md).
+See [TASKS.md](TASKS.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), [SECURITY.md](SECURITY.md), and the [testnet deployment runbook](docs/TESTNET_DEPLOYMENT.md).
 
 ## License
 
