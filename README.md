@@ -8,7 +8,8 @@ Outlay is a security layer for autonomous agent spending. Agents may propose spe
 
 ## What we're building
 
-- **Policy enforcement:** budgets, scopes, destinations, expiry, and approval requirements.\n- **Agent authentication:** high-entropy bearer keys with digest-only storage and constant-time verification.
+- **Policy enforcement:** budgets, scopes, destinations, expiry, and approval requirements.
+- **Agent authentication:** high-entropy bearer keys with digest-only storage and constant-time verification.
 - **Spending intents:** structured requests that can be validated independently of agent behavior.
 - **Decision receipts:** durable records of allow/deny outcomes and policy context.
 - **NEAR integration:** contract-enforced authorization, with Chain Signatures considered only behind strict payload validation.
