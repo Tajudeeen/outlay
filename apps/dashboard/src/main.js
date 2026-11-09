@@ -54,6 +54,12 @@ async function refresh() {
       callView(contractId, "get_decision", { decision_id: decisionId }, globalThis.fetch, countResult.blockHash),
     ]);
 
+    if (results.some((result) =>
+      result.blockHash !== countResult.blockHash || result.blockHeight !== countResult.blockHeight
+    )) {
+      throw new Error("NEAR RPC returned inconsistent finalized block data");
+    }
+
     const [policyResult, versionResult, spendResult, grantResult, decisionResult] = results;
     const policy = policyResult.value;
     const grant = grantResult.value;
