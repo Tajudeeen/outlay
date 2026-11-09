@@ -27,11 +27,11 @@ Put a deterministic authorization boundary between autonomous agents and spendin
 - Emits events or records decisions with enough context for verification.
 - Does not trust UI or service-only checks.
 
-### 4. Risk service (TypeScript)
-- Evaluates optional risk signals such as velocity, destination reputation, anomaly flags, and data freshness.
-- Can deny or require human approval.
-- Cannot grant permission that contract policy denies.
-- Fails closed where a required signal is unavailable.
+### 4. Risk evaluator (TypeScript library primitive)
+- Validates signal schema, source provenance, evidence hashes, freshness, and required categories.
+- Can return clear, review, or deny. It cannot authorize spending.
+- The evaluator is implemented and tested, but no live external signal provider is connected to the API yet.
+- Future integration must fail closed where a required signal is missing or unavailable.
 
 ### 5. Execution / signer adapter
 - Receives only contract-authorized, canonical transaction data.
@@ -53,7 +53,7 @@ Put a deterministic authorization boundary between autonomous agents and spendin
 
 1. Agent submits intent.
 2. API authenticates and normalizes it.
-3. Risk service evaluates configured signals.
+3. A trusted risk provider may supply signals to the risk evaluator once that integration is configured. The current API does not yet call an external risk provider.
 4. Contract validates agent scope, policy, expiry, nonce, and budget.
 5. Contract records authorization atomically and reserves policy budget. Expired reservations require explicit reconciliation.
 6. Only an authorized canonical payload reaches the execution adapter.
