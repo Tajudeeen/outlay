@@ -18,7 +18,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Implement atomic budget reservation accounting.
 - [x] Add nonce/replay protection and intent/policy expiry.
 - [x] Emit structured authorization and reservation-release events.
-- [x] Add 23 contract unit tests covering authorization, ownership, replay, budget limits, policy versions, and reservation lifecycle.
+- [x] Add 32 contract unit tests covering authorization, ownership, replay, budget limits, policy versions, and reservation lifecycle.
 - [x] Cover unauthorized callers, invalid identifiers, replay, and expiry denial paths in contract tests.
 
 ## Milestone 2: intent API and policy service
@@ -28,7 +28,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Idempotency and request limits.
 - [ ] API integration tests against contract behavior.
 - [x] Deterministic fail-closed preflight evaluator and unit cases.
-- [ ] Fail-closed behavior for critical dependency failures.
+- [x] Credential-store lookup failures reject authentication, and malformed numeric policy snapshots deny preflight.
 
 ## Milestone 3: signing/execution boundary
 - [ ] Document signing threat model and supported transaction shapes.
@@ -46,7 +46,8 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 
 ## Milestone 5: adversarial harness
 - [ ] Budget race and overspend attempts.
-- [x] Replay and expired-intent attacks in contract unit tests and testnet evidence.
+- [x] Nonce and intent replay attacks in contract unit tests and testnet evidence.
+- [x] Expired-intent and policy-expiry denial paths in contract unit tests.
 - [x] Agent scope enforcement for registered, disabled, and unknown callers.
 - [x] Destination and amount-limit denial paths.
 - [x] Unauthorized policy mutation rejected by owner checks.
@@ -56,7 +57,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] External dependency failure injection.
 
 ## Milestone 6: dashboard and evidence
-- [x] Read-only testnet views for policy, agent grant, and decision receipt (dashboard RPC adapter tests pass; browser RPC check pending).
+- [x] Read-only testnet views for policy, agent grant, and decision receipt (RPC adapter CI and public browser check pass).
 - [x] Clear testnet, read-only, and authorization-not-payment labels.
 - [x] Read-only on-chain decision receipt display.
 - [ ] Policy and agent management views.
