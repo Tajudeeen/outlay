@@ -220,7 +220,7 @@ describe("Outlay API handler", () => {
     const response = await request("/v1/admin/agent-keys", {
       method: "POST",
       headers: { "x-outlay-admin-token": "a".repeat(48), "content-type": "application/json" },
-      body: JSON.stringify({ agentId: "outlay-agent.testnet" }),
+      body: JSON.stringify({ agentId: "outlay-agent.testnet", rotate: true }),
     });
     expect(response.status).toBe(201);
     const body = await response.json() as { apiKey: string; shownOnce: boolean };
