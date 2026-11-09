@@ -98,7 +98,9 @@ export function validateExecutionEnvelope(input: {
     return fail("NETWORK_MISMATCH");
   }
 
-  const authorizationResult = VerifiedAuthorizationSchema.safeParse(input.authorization);\n  if (!authorizationResult.success) return fail("AUTHORIZATION_EVIDENCE_INVALID");\n  const auth = authorizationResult.data;
+  const authorizationResult = VerifiedAuthorizationSchema.safeParse(input.authorization);
+  if (!authorizationResult.success) return fail("AUTHORIZATION_EVIDENCE_INVALID");
+  const auth = authorizationResult.data;
   if (!auth.active) return fail("AUTHORIZATION_INACTIVE");
   if (auth.released) return fail("RESERVATION_RELEASED");
 
