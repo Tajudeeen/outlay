@@ -39,7 +39,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Add replay, substitution, and derivation-path tests.
 
 ## Milestone 4: risk engine
-- [x] Define strict risk signal schema, source provenance, evidence hash, and freshness window.
+- [x] Define strict risk signal schema, Ed25519 source signatures, evidence hash, and freshness window.
 - [x] Add deterministic risk rules with clear, review, and deny outcomes.
 - [x] Test stale, missing, future-dated, duplicate, contradictory, and untrusted signals.
 - [ ] Ensure risk service cannot override contract denial.
