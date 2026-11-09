@@ -7,14 +7,14 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Establish README, engineering rules, initial architecture, and threat model.
 - [ ] Choose license and contribution policy.
 - [ ] Pin toolchain and dependency versions.
-- [ ] Add CI for formatting, linting, type checks, and tests.
+- [x] Add CI for formatting, type checks, unit tests, and WASM compilation.
 
 ## Milestone 1: contract authorization core
-- [ ] Initialize Rust workspace and NEAR contract.
+- [x] Initialize Rust workspace and NEAR contract.
 - [ ] Define canonical spending intent and policy types.
-- [ ] Add owner/admin and agent registration with least privilege.
-- [ ] Add policy creation/update with explicit scope and limits.
-- [ ] Implement deterministic authorization decision.
+- [x] Add owner/admin and agent registration with least privilege.
+- [x] Add policy creation/update with explicit scope and limits.
+- [x] Implement deterministic authorization decision.
 - [x] Implement atomic budget reservation accounting.
 - [x] Add nonce/replay protection and intent/policy expiry.
 - [x] Emit structured authorization and reservation-release events.
@@ -22,7 +22,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Contract tests for unauthorized and adversarial calls.
 
 ## Milestone 2: intent API and policy service
-- [x] TypeScript strict intent schema and decimal-string boundaries (CI pending).
+- [x] TypeScript strict intent schema and decimal-string boundaries.
 - [ ] Authentication and agent-to-policy mapping.
 - [ ] Idempotency and request limits.
 - [ ] API integration tests against contract behavior.
