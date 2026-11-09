@@ -44,22 +44,20 @@ async function refresh() {
   setText("connection-state", "querying testnet");
 
   try {
+    const countResult = await callView(contractId, "get_decision_count");
+    if (!countResult.blockHash) throw new Error("NEAR RPC did not return a finalized block hash");
     const results = await Promise.all([
-      callView(contractId, "get_decision_count"),
-      callView(contractId, "get_policy", { policy_id: policyId }),
-      callView(contractId, "get_policy_version", { policy_id: policyId }),
-      callView(contractId, "get_policy_spend", { policy_id: policyId }),
-      callView(contractId, "get_agent_grant", { agent_id: agentId }),
-      callView(contractId, "get_decision", { decision_id: decisionId }),
+      callView(contractId, "get_policy", { policy_id: policyId }, globalThis.fetch, countResult.blockHash),
+      callView(contractId, "get_policy_version", { policy_id: policyId }, globalThis.fetch, countResult.blockHash),
+      callView(contractId, "get_policy_spend", { policy_id: policyId }, globalThis.fetch, countResult.blockHash),
+      callView(contractId, "get_agent_grant", { agent_id: agentId }, globalThis.fetch, countResult.blockHash),
+      callView(contractId, "get_decision", { decision_id: decisionId }, globalThis.fetch, countResult.blockHash),
     ]);
 
-    const [countResult, policyResult, versionResult, spendResult, grantResult, decisionResult] = results;
+    const [policyResult, versionResult, spendResult, grantResult, decisionResult] = results;
     const policy = policyResult.value;
     const grant = grantResult.value;
     const decision = decisionResult.value;
-    const blockHeights = results.map((result) => result.blockHeight).filter(Boolean);
-    const highestBlock = blockHeights.length ? Math.max(...blockHeights) : null;
-
     setText("decision-count", countResult.value ?? "0");
     setText("reserved-budget", formatUnits(spendResult.value ?? "0"));
     setText("policy-version", versionResult.value ?? "0");
@@ -129,7 +127,7 @@ async function refresh() {
     }
 
     setText("connection-state", "connected · finalized");
-    setText("last-updated", highestBlock ? "block #" + highestBlock : "finalized state");
+    setText("last-updated", countResult.blockHeight ? "block #" + countResult.blockHeight : "finalized state");
   } catch (error) {
     setText("connection-state", "rpc unavailable");
     errorPanel.hidden = false;
