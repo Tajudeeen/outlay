@@ -8,14 +8,14 @@ Outlay is a security layer for autonomous agent spending. Agents may propose spe
 
 ## What we're building
 
-- **Policy enforcement:** budgets, scopes, destinations, expiry, and approval requirements.
+- **Policy enforcement:** contract-enforced budgets, agent scopes, destination allowlists, expiry, and replay protection.
 - **Agent authentication:** high-entropy bearer keys with digest-only storage and constant-time verification.
 - **Spending intents:** structured requests that can be validated independently of agent behavior.
-- **Decision receipts:** durable records of allow/deny outcomes and policy context.
+- **Decision receipts:** on-chain records of successful authorizations and budget reservations. Preflight denials are API responses, not on-chain decision records.
 - **NEAR integration:** contract-enforced authorization, with Chain Signatures considered only behind strict payload validation.
-- **Risk engine:** additional signals that can deny or escalate requests, never silently override contract policy.
+- **Risk evaluator prototype:** deterministic signal checks for clear, review, and deny outcomes. No live external risk provider is connected yet.
 - **Adversarial testing:** replay, expiry, budget exhaustion, malformed requests, compromised-agent, and boundary tests.
-- **Dashboard:** inspect policies, intents, decisions, and evidence.
+- **Dashboard:** inspect on-chain policies, agent grants, decision receipts, and testnet evidence.
 
 ## Security stance
 
