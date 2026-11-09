@@ -17,7 +17,7 @@ Open https://outlay-dashboard.vercel.app. The dashboard is read-only and queries
 
 ### 0:15-0:35 - Live contract state
 
-Open the dashboard and refresh. Show the finalized NEAR testnet connection, the policy, the agent grant, and the decision receipt. Point out that all views are pinned to one finalized block and the dashboard does not submit transactions.
+Open the dashboard and refresh. Show the finalized NEAR testnet connection, policy, agent grant, and decision receipt. Point out the displayed block height and full block hash. All views are pinned to that same finalized block, making the snapshot reproducible. The dashboard does not submit transactions.
 
 ### 0:35-0:55 - Policy boundary
 
