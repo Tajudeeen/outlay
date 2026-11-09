@@ -35,6 +35,9 @@ Put a deterministic authorization boundary between autonomous agents and spendin
 
 ### 5. Execution / signer adapter
 - Receives only contract-authorized, canonical transaction data.
+- Signing threat model: `docs/SIGNING_THREAT_MODEL.md`.
+- Proposed envelope and validation rules: `docs/EXECUTION_PAYLOAD_SPEC.md`.
+- Current `policy-unit` amounts cannot map to real asset units. The signer remains disabled until a denomination model and asset mapping are approved.
 - Validates destination, asset, amount, network, and derivation path.
 - Never accepts an arbitrary agent-supplied transaction hash as signing authority.
 - Chain Signatures integration is a separate milestone with explicit security review.
