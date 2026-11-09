@@ -15,10 +15,10 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [ ] Add owner/admin and agent registration with least privilege.
 - [ ] Add policy creation/update with explicit scope and limits.
 - [ ] Implement deterministic authorization decision.
-- [ ] Implement atomic budget accounting.
-- [ ] Add nonce/replay protection and expiry.
-- [ ] Emit decision events with stable identifiers.
-- [ ] Unit tests for all allow/deny branches and state invariants.
+- [x] Implement atomic budget reservation accounting.
+- [x] Add nonce/replay protection and intent/policy expiry.
+- [x] Emit structured authorization and reservation-release events.
+- [ ] Expand contract tests for authorization, ownership, replay, and reservation lifecycle.
 - [ ] Contract tests for unauthorized and adversarial calls.
 
 ## Milestone 2: intent API and policy service
