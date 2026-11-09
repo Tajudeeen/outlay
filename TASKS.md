@@ -11,19 +11,19 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 
 ## Milestone 1: contract authorization core
 - [x] Initialize Rust workspace and NEAR contract.
-- [ ] Define canonical spending intent and policy types.
+- [x] Define canonical spending intent and policy types, with policy versions recorded in decisions.
 - [x] Add owner/admin and agent registration with least privilege.
 - [x] Add policy creation/update with explicit scope and limits.
 - [x] Implement deterministic authorization decision.
 - [x] Implement atomic budget reservation accounting.
 - [x] Add nonce/replay protection and intent/policy expiry.
 - [x] Emit structured authorization and reservation-release events.
-- [x] Add 15 contract unit tests covering authorization, ownership, replay, budget limits, and reservation lifecycle.
+- [x] Add 16 contract unit tests covering authorization, ownership, replay, budget limits, policy versions, and reservation lifecycle.
 - [x] Cover unauthorized callers, invalid identifiers, replay, and expiry denial paths in contract tests.
 
 ## Milestone 2: intent API and policy service
 - [x] TypeScript strict intent schema and decimal-string boundaries.
-- [ ] Authentication and agent-to-policy mapping.
+- [x] Agent key issuance, digest-only storage interface, and bearer authentication module.\n- [ ] Persistent credential store, key revocation/rotation, rate limiting, and agent-to-policy mapping.
 - [ ] Idempotency and request limits.
 - [ ] API integration tests against contract behavior.
 - [x] Deterministic fail-closed preflight evaluator and unit cases.
