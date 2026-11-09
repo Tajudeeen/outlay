@@ -45,7 +45,8 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - [x] Define strict risk signal schema, Ed25519 source signatures, evidence hash, and freshness window.
 - [x] Add deterministic risk rules with clear, review, and deny outcomes.
 - [x] Test stale, missing, future-dated, duplicate, contradictory, and untrusted signals.
-- [x] Add a tested contract-first risk composition guard. It preserves contract denials and lets risk add review/deny holds. The API route is not yet wired to live risk signals.
+- [x] Add a tested contract-first risk composition guard. It preserves contract denials and lets risk add review/deny holds.
+- [x] Wire a trusted server-side risk evaluator injection point into API preflight. Contract denials skip risk evaluation, review/deny holds block, and required/misbehaving providers fail closed. No live external provider is configured yet.
 
 ## Milestone 5: adversarial harness
 - [x] Add contract adversarial cases for competing agents on one policy, exact budget exhaustion, and u128 overflow. Unit tests model serialized state transitions, not simultaneous live transactions.
@@ -94,7 +95,7 @@ Status key: `[ ]` not started, `[x]` verified complete. Do not mark a task compl
 - Policy and risk library: 59 tests passed, including 12 execution-envelope validation cases.
 - API: 26 tests passed, including PostgreSQL integration and dependency-failure coverage.
 - Dashboard RPC adapter: 7 tests passed.
-- Combined verified automated test count: 129 passed, 0 failed. Latest combined policy/API/dashboard/container workflow [42626904403](https://github.com/Tajudeeen/outlay/actions/runs/42626904403) passed. This includes PostgreSQL integration and API dependency-failure coverage.
+- Combined verified automated test count: 134 passed, 0 failed. Latest combined policy/API/dashboard/container workflow [42627291482](https://github.com/Tajudeeen/outlay/actions/runs/42627291482) passed. This includes PostgreSQL integration, API dependency-failure, and risk-gate coverage.
 - PowerShell smoke runner: parser validation passed. Live testnet execution remains a PC-only step.
 - API container: non-root image build and runtime `/health` check passed against PostgreSQL in CI.
 - Latest API concurrency workflow: [run 42590845687](https://github.com/Tajudeeen/outlay/actions/runs/42590845687), successful.
