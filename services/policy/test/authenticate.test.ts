@@ -25,6 +25,15 @@ describe("authenticateAgent", () => {
     await expect(authenticateAgent("Bearer malformed", store)).resolves.toBeNull();
   });
 
+  it("rejects malformed key lengths before querying the store", async () => {
+    let lookups = 0;
+    const store: AgentCredentialStore = {
+      async findByKeyHash() { lookups += 1; return null; },
+    };
+    await expect(authenticateAgent("Bearer outlay_agent_too-short", store)).resolves.toBeNull();
+    expect(lookups).toBe(0);
+  });
+
   it("rejects disabled credentials", async () => {
     const issued = issueAgentKey();
     const store: AgentCredentialStore = {
