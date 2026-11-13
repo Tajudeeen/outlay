@@ -1,5 +1,6 @@
 import { loadContractSnapshot } from "./near-rpc.js";
 import { initializeWallet } from "./wallet.js";
+import { initializeEvmWallet } from "./evm-wallet.js";
 const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 const state = {
@@ -286,6 +287,7 @@ $("#notifications").addEventListener("click",()=>toast("You're all caught up in 
 $("#modal-layer").addEventListener("click",e=>{if(e.target.dataset.closeModal!==undefined)closeModal();});
 render();
 initializeWallet();
+initializeEvmWallet();
 
 // First-visit splash: keep the intro out of the way after the visitor enters.
 const splash=$("#splash-screen");
