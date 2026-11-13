@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { callView, decodeNearResult, encodeJsonArgs, parseNearJson, TESTNET_RPC, verifyDecisionReceipt } from "../src/near-rpc.js";
+import { callView, decodeNearResult, encodeJsonArgs, loadContractSnapshot, parseNearJson, TESTNET_RPC, verifyDecisionReceipt } from "../src/near-rpc.js";
 
 test("encodes JSON arguments as UTF-8 base64", () => {
   assert.equal(encodeJsonArgs({ policy_id: "smoke-test" }), "eyJwb2xpY3lfaWQiOiJzbW9rZS10ZXN0In0=");
@@ -129,4 +129,67 @@ test("reads reservation release state from a pinned finalized block", async () =
   assert.equal(result.value, true);
   assert.equal(requestedBody.params.method_name, "is_reservation_released");
   assert.equal(requestedBody.params.block_id, "pinned-block-hash");
+});
+
+
+test("loads a finalized contract snapshot pinned to one block", async () => {
+  const requests = [];
+  const values = {
+    get_decision_count: "2",
+    get_policy: JSON.stringify({
+      enabled: true, expires_at_ns: "2000000000000000000",
+      max_per_transaction: "50", max_total: "100",
+      allowed_destinations: ["outlay-agent.testnet"],
+    }),
+    get_policy_version: "3",
+    get_policy_spend: "75",
+    get_agent_grant: JSON.stringify({ enabled: true, policy_id: "smoke-test" }),
+  };
+  const fetchImpl = async (_url, options) => {
+    const body = JSON.parse(options.body);
+    requests.push(body.params);
+    const value = values[body.params.method_name];
+    return new Response(JSON.stringify({
+      jsonrpc: "2.0", id: "outlay-dashboard",
+      result: {
+        result: Array.from(new TextEncoder().encode(value)),
+        block_height: 456, block_hash: "one-finalized-block",
+      },
+    }), { status: 200 });
+  };
+  const snapshot = await loadContractSnapshot(
+    "outlay-deployer.testnet", "smoke-test", "outlay-agent.testnet", fetchImpl,
+  );
+  assert.equal(snapshot.decisionCount, "2");
+  assert.equal(snapshot.reserved, "75");
+  assert.equal(snapshot.policy.max_total, "100");
+  assert.equal(snapshot.grant.enabled, true);
+  assert.equal(snapshot.blockHeight, 456);
+  assert.equal(requests.length, 5);
+  assert.ok(requests.slice(1).every((params) => params.block_id === "one-finalized-block"));
+});
+
+test("rejects inconsistent block-pinned dashboard snapshots", async () => {
+  let call = 0;
+  const fetchImpl = async (_url, options) => {
+    const body = JSON.parse(options.body);
+    call += 1;
+    const value = body.params.method_name === "get_decision_count" ? "2"
+      : body.params.method_name === "get_policy" ? "null"
+      : body.params.method_name === "get_policy_version" ? "1"
+      : body.params.method_name === "get_policy_spend" ? "0"
+      : "null";
+    return new Response(JSON.stringify({
+      jsonrpc: "2.0", id: "outlay-dashboard",
+      result: {
+        result: Array.from(new TextEncoder().encode(value)),
+        block_height: call === 3 ? 457 : 456,
+        block_hash: call === 3 ? "different-block" : "one-finalized-block",
+      },
+    }), { status: 200 });
+  };
+  await assert.rejects(
+    loadContractSnapshot("outlay-deployer.testnet", "smoke-test", "outlay-agent.testnet", fetchImpl),
+    /INCONSISTENT_NEAR_SNAPSHOT/,
+  );
 });
