@@ -259,6 +259,11 @@ impl Outlay {
         ));
     }
 
+    /// Exposes the configured administrator for wallet-side identity checks. This is a read-only view.
+    pub fn get_owner(&self) -> AccountId {
+        self.owner.clone()
+    }
+
     pub fn get_decision(&self, decision_id: String) -> Option<SpendDecision> {
         self.decisions.get(&decision_id).cloned()
     }
@@ -331,6 +336,12 @@ mod tests {
         });
         contract.register_agent(account("agent.testnet"), "daily".into());
         contract
+    }
+
+    #[test]
+    fn exposes_configured_owner_for_read_only_wallet_verification() {
+        let contract = setup();
+        assert_eq!(contract.get_owner(), account("owner.testnet"));
     }
 
     #[test]
