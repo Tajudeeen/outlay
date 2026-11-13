@@ -111,3 +111,59 @@ export function verifyDecisionReceipt(decision, expected) {
   ];
   return { valid: checks.every((check) => check.passed), checks };
 }
+
+
+/**
+ * Read the dashboard's known testnet policy and agent at one finalized block.
+ * This is an observational snapshot only. It cannot authorize or mutate state.
+ */
+export async function loadContractSnapshot(
+  contractId = "outlay-deployer.testnet",
+  policyId = "smoke-test",
+  agentId = "outlay-agent.testnet",
+  fetchImpl = globalThis.fetch,
+) {
+  const head = await callView(contractId, "get_decision_count", {}, fetchImpl);
+  if (!head.blockHash || !Number.isSafeInteger(head.blockHeight)) {
+    throw new Error("INVALID_FINALIZED_HEAD");
+  }
+  const [policyResult, versionResult, spendResult, grantResult] = await Promise.all([
+    callView(contractId, "get_policy", { policy_id: policyId }, fetchImpl, head.blockHash),
+    callView(contractId, "get_policy_version", { policy_id: policyId }, fetchImpl, head.blockHash),
+    callView(contractId, "get_policy_spend", { policy_id: policyId }, fetchImpl, head.blockHash),
+    callView(contractId, "get_agent_grant", { agent_id: agentId }, fetchImpl, head.blockHash),
+  ]);
+  for (const result of [policyResult, versionResult, spendResult, grantResult]) {
+    if (result.blockHash !== head.blockHash || result.blockHeight !== head.blockHeight) {
+      throw new Error("INCONSISTENT_NEAR_SNAPSHOT");
+    }
+  }
+  const uint = (value) => typeof value === "string" && /^(0|[1-9][0-9]*)$/.test(value);
+  const policy = policyResult.value;
+  const grant = grantResult.value;
+  if (!uint(head.value) || !uint(versionResult.value) || !uint(spendResult.value)) {
+    throw new Error("INVALID_CONTRACT_COUNTER");
+  }
+  if (policy !== null && (
+    typeof policy.enabled !== "boolean"
+    || !uint(policy.expires_at_ns)
+    || !uint(policy.max_per_transaction)
+    || !uint(policy.max_total)
+    || !Array.isArray(policy.allowed_destinations)
+    || !policy.allowed_destinations.every((value) => typeof value === "string")
+  )) throw new Error("INVALID_POLICY_SNAPSHOT");
+  if (grant !== null && (
+    typeof grant.enabled !== "boolean" || typeof grant.policy_id !== "string"
+  )) throw new Error("INVALID_AGENT_GRANT");
+  return {
+    blockHeight: head.blockHeight,
+    blockHash: head.blockHash,
+    decisionCount: head.value,
+    policyId,
+    policyVersion: versionResult.value,
+    reserved: spendResult.value,
+    policy,
+    agentId,
+    grant,
+  };
+}
