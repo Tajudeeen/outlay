@@ -1,4 +1,5 @@
 import { loadContractSnapshot } from "./near-rpc.js";
+import { initializeWallet } from "./wallet.js";
 const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 const state = {
@@ -284,6 +285,7 @@ $("#mobile-menu").addEventListener("click",()=>$("#sidebar").classList.toggle("m
 $("#notifications").addEventListener("click",()=>toast("You're all caught up in this preview."));
 $("#modal-layer").addEventListener("click",e=>{if(e.target.dataset.closeModal!==undefined)closeModal();});
 render();
+initializeWallet();
 
 // First-visit splash: keep the intro out of the way after the visitor enters.
 const splash=$("#splash-screen");
