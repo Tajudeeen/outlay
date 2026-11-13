@@ -167,3 +167,23 @@ export async function loadContractSnapshot(
     grant,
   };
 }
+
+
+/**
+ * Read the configured contract owner from finalized NEAR testnet state.
+ * This is the authoritative identity check used to unlock wallet management.
+ */
+export async function loadContractOwner(
+  contractId = "outlay-deployer.testnet",
+  fetchImpl = globalThis.fetch,
+) {
+  const result = await callView(contractId, "get_owner", {}, fetchImpl);
+  if (typeof result.value !== "string" || !result.value) {
+    throw new Error("INVALID_CONTRACT_OWNER");
+  }
+  return {
+    accountId: result.value,
+    blockHeight: result.blockHeight,
+    blockHash: result.blockHash,
+  };
+}
