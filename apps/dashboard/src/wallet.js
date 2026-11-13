@@ -9,6 +9,7 @@ const $ = (selector) => document.querySelector(selector);
 let connector;
 let wallet;
 let accountId = null;
+let evmConnected = false;
 let ownerId = null;
 let adminClient = null;
 let initialized = false;
@@ -22,9 +23,9 @@ function setStatus(message, tone = "muted") {
   }
   const button = $("#wallet-connect");
   if (button) {
-    button.textContent = accountId ? "wallet connected" : busy ? "connecting…" : "connect wallet";
+    button.textContent = (accountId || evmConnected) ? "wallet connected" : busy ? "connecting…" : "connect wallet";
     button.disabled = busy;
-    button.dataset.connected = accountId ? "true" : "false";
+    button.dataset.connected = (accountId || evmConnected) ? "true" : "false";
   }
 }
 
@@ -115,11 +116,19 @@ export async function initializeWallet() {
       if (picker) picker.hidden = true;
       button.setAttribute("aria-expanded", "false");
     };
+    window.addEventListener("outlay:evm-wallet-state", (event) => {
+      evmConnected = Boolean(event.detail?.connected);
+      if (!accountId) setStatus(evmConnected ? "evm wallet connected · near management unavailable" : "wallet not connected", evmConnected ? "success" : "muted");
+      else setStatus("near wallet connected", "success");
+    });
     button.addEventListener("click", () => {
       if (accountId && wallet) {
         busy = true;
-        setStatus("disconnecting wallet…", "pending");
-        Promise.resolve(wallet.signOut?.() ?? connector.disconnect?.())
+        setStatus("disconnecting near wallet…", "pending");
+        const disconnect = typeof wallet.signOut === "function"
+          ? wallet.signOut()
+          : connector.disconnect?.();
+        Promise.resolve(disconnect)
           .then(() => clearWallet())
           .catch((error) => setStatus(error?.message || "wallet disconnect failed", "warning"))
           .finally(() => { busy = false; });
