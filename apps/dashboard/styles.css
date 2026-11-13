@@ -320,3 +320,15 @@ button:focus-visible,.nav-item:focus-visible,.btn:focus-visible{
 .wallet-status[data-tone="success"]{color:#b9f27c}
 .wallet-status[data-tone="warning"]{color:#e5a36f}
 @media(max-width:900px){.wallet-status{display:none}.wallet-connect{padding:0 8px}}
+
+
+/* EVM wallet discovery and connection */
+.evm-wallet-connect{border-color:#a78bfa55;color:#d8c9ff}
+.evm-wallet-status[data-tone="success"]{color:#b9f27c}
+.evm-wallet-status[data-tone="warning"]{color:#e5a36f}
+.evm-wallet-options{position:absolute;z-index:30;top:58px;right:92px;min-width:190px;padding:7px;border:1px solid #ffffff20;border-radius:10px;background:#111820;box-shadow:0 16px 42px #0009}
+.evm-wallet-options[hidden]{display:none}
+.evm-wallet-options button{display:flex;width:100%;align-items:center;gap:9px;padding:10px;border:0;border-radius:7px;background:transparent;color:#e8edf2;text-align:left;font:10px var(--mono);cursor:pointer}
+.evm-wallet-options button:hover{background:#ffffff0d}
+.evm-wallet-options img{width:19px;height:19px;object-fit:contain;border-radius:5px}
+@media(max-width:900px){.evm-wallet-status{display:none}.evm-wallet-connect{padding:0 8px}.evm-wallet-options{right:10px;top:54px}}
