@@ -310,3 +310,13 @@ button:focus-visible,.nav-item:focus-visible,.btn:focus-visible{
 @keyframes outlay-pulse{50%{box-shadow:0 0 0 9px #e88c6108,0 0 5px #e88c61}}
 @media(max-width:800px){.live-snapshot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.live-snapshot-panel{padding:14px}.live-snapshot-grid{gap:8px}.live-snapshot-grid>div{padding:10px}.live-snapshot-grid strong{font-size:16px}.live-snapshot-foot{gap:9px}.live-snapshot-foot a{margin-left:0;width:100%}}
+
+
+/* Wallet connection and on-chain owner verification */
+.wallet-connect{min-height:31px;padding:0 11px;font-size:8px;letter-spacing:.2px}
+.wallet-connect[data-connected="true"]{border-color:#b9f27c55;color:var(--mint)}
+.wallet-status{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:8px var(--mono);letter-spacing:.25px;color:#84929d}
+.wallet-status[data-tone="pending"]{color:#d9b56e}
+.wallet-status[data-tone="success"]{color:#b9f27c}
+.wallet-status[data-tone="warning"]{color:#e5a36f}
+@media(max-width:900px){.wallet-status{display:none}.wallet-connect{padding:0 8px}}
