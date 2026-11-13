@@ -12,6 +12,19 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+  <section class="splash-screen" id="splash-screen" aria-labelledby="splash-title">
+    <div class="splash-orbit splash-orbit-one"></div><div class="splash-orbit splash-orbit-two"></div>
+    <div class="splash-content">
+      <a class="splash-brand" href="#" aria-label="Outlay"><span class="brand-mark"><i></i><i></i><i></i></span><span>outlay</span></a>
+      <p class="splash-kicker"><span></span> AUTONOMOUS SPENDING CONTROL PLANE</p>
+      <h1 id="splash-title">give every agent<br><em>a spending boundary.</em></h1>
+      <p class="splash-copy">define authority, evaluate every intent, and keep an auditable record of every decision.</p>
+      <button class="splash-enter" id="enter-workspace">enter workspace <span>↗</span></button>
+      <div class="splash-meta"><span>NEAR TESTNET</span><i></i><span>INTERFACE PREVIEW</span><i></i><span>AUTHORIZATION FIRST</span></div>
+    </div>
+    <button class="splash-skip" id="skip-splash">skip intro</button>
+    <div class="splash-bottomline"><span>OUTLAY / 2026</span><span>authorization is not payment</span></div>
+  </section>
   <div class="app" id="app">
     <aside class="sidebar" id="sidebar">
       <a class="brand" href="#" aria-label="Outlay home"><span class="brand-mark"><i></i><i></i><i></i></span><span>outlay</span></a>
@@ -42,7 +55,15 @@
       </header>
       <div class="preview-banner"><span class="preview-banner-icon">i</span><span><b>Workspace preview.</b> Sample records and management actions are for interface review only. They do not submit transactions or change contract state.</span><a href="./live.html">open live contract inspector ↗</a></div>
       <section class="page-wrap" id="page-content" aria-live="polite"></section>
-      <footer class="app-footer"><span>OUTLAY CONTROL PLANE <i>·</i> TESTNET PREVIEW</span><span>authorization is not payment</span><a href="https://github.com/Tajudeeen/outlay" target="_blank" rel="noreferrer">source ↗</a></footer>
+      <footer class="app-footer">
+        <div class="footer-main">
+          <div class="footer-brand-block"><a class="footer-brand" href="#" data-page="overview"><span class="brand-mark"><i></i><i></i><i></i></span><span>outlay</span></a><p>spending authority for autonomous agents, with policy checks and auditable decisions at the core.</p><span class="footer-status"><i></i> NEAR TESTNET PREVIEW</span></div>
+          <div class="footer-links"><b>WORKSPACE</b><a href="#" data-page="policies">policies</a><a href="#" data-page="agents">agents</a><a href="#" data-page="intents">intents</a><a href="#" data-page="audit">audit log</a></div>
+          <div class="footer-links"><b>RESOURCES</b><a href="./live.html">live contract inspector ↗</a><a href="https://github.com/Tajudeeen/outlay" target="_blank" rel="noreferrer">source code ↗</a><a href="#" data-page="settings">environment status</a></div>
+          <div class="footer-note"><span>THE RULE</span><p>authorization is not payment.</p><small>signing and settlement remain disabled in this preview.</small></div>
+        </div>
+        <div class="footer-bottom"><span>© 2026 OUTLAY. BUILT FOR VERIFIABLE SPENDING.</span><span>TESTNET · PREVIEW DATA · NO ASSET TRANSFERS</span></div>
+      </footer>
     </main>
   </div>
   <div class="modal-layer" id="modal-layer" hidden><div class="modal-backdrop" data-close-modal></div><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><p class="eyebrow" id="modal-eyebrow">WORKSPACE ACTION</p><h2 id="modal-title">New item</h2></div><button class="icon-button" data-close-modal aria-label="Close">×</button></div><div id="modal-body"></div></section></div>
