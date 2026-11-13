@@ -247,3 +247,22 @@ $("#mobile-menu").addEventListener("click",()=>$("#sidebar").classList.toggle("m
 $("#notifications").addEventListener("click",()=>toast("You're all caught up in this preview."));
 $("#modal-layer").addEventListener("click",e=>{if(e.target.dataset.closeModal!==undefined)closeModal();});
 render();
+
+// First-visit splash: keep the intro out of the way after the visitor enters.
+const splash=$("#splash-screen");
+function enterWorkspace(){
+ if(!splash)return;
+ splash.classList.add("is-leaving");
+ try{sessionStorage.setItem("outlay-intro-seen","1");}catch{}
+ window.setTimeout(()=>splash.remove(),700);
+}
+if(splash){
+ let seen=false;
+ try{seen=sessionStorage.getItem("outlay-intro-seen")==="1";}catch{}
+ if(seen)splash.remove();
+ else{
+  $("#enter-workspace")?.addEventListener("click",enterWorkspace);
+  $("#skip-splash")?.addEventListener("click",enterWorkspace);
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.contains(splash))enterWorkspace();});
+ }
+}
