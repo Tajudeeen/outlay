@@ -9,6 +9,8 @@ Open https://outlay-dashboard.vercel.app. The dashboard is read-only and queries
 - agent: `outlay-agent.testnet`
 - decision: `outlay:276883946:1`
 
+Deployment note: the alias was last confirmed on a READY deployment built from commit `8fa1206ca865163cde77843e34b2ba0443fddd56`. A later deployment attempt for `b8841f1aea640d5031c29bef300bc4ae9aa1e24d` was canceled. Confirm the alias and deployed commit again before recording a demo. Do not imply the canceled build is live.
+
 ## Two-minute demo sequence
 
 ### 0:00-0:15 - Problem
@@ -37,8 +39,10 @@ Open the failed over-limit and unlisted-destination transactions. Then show the 
 
 ## Evidence links
 
-- Latest policy/API/dashboard/container CI: https://github.com/Tajudeeen/outlay/actions/runs/42641447603
-- Latest contract CI: https://github.com/Tajudeeen/outlay/actions/runs/42613038594
+- TypeScript workflow: https://github.com/Tajudeeen/outlay/actions/runs/43411852846
+- Contract workflow and WASM artifact: https://github.com/Tajudeeen/outlay/actions/runs/43409204168
+
+The TypeScript workflow was checked on commit `8fa1206ca865163cde77843e34b2ba0443fddd56`. The contract workflow was checked on contract source commit `60337e0e5ace73e34a6473c0a97db058b6a51189`. These are not the same SHA as the later `main` commit.
 
 - Policy creation: https://explorer.testnet.near.org/transactions/C6niQsAExNooj3UEdxS7QiEcveTdemxf75YNqyqwi46q
 - Agent registration: https://explorer.testnet.near.org/transactions/2tgPt6UzBxgyTJUE8UiizCkuUpRpy7VY78jhEUUuVoeM
@@ -47,8 +51,6 @@ Open the failed over-limit and unlisted-destination transactions. Then show the 
 - Unlisted-destination rejection: https://explorer.testnet.near.org/transactions/2yz7oybTZ7B35kpZR9EqsQBqfavnBe7JVS1wrCy7eUVe
 - Nonce replay rejection: https://explorer.testnet.near.org/transactions/4knqhraRngDbH7QyVdLcHHkyDY9agYauXmQ9uGmHiZpU
 - Intent replay rejection: https://explorer.testnet.near.org/transactions/EJiTEMpVrVb2bgQoFK6mmQYLBZCDfQ4nikWbW82nYexS
-- Rust contract CI: https://github.com/Tajudeeen/outlay/actions/runs/42578404685
-- TypeScript CI: https://github.com/Tajudeeen/outlay/actions/runs/42578410760
 
 ## Recording checklist
 

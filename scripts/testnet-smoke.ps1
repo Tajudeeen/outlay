@@ -19,7 +19,16 @@ if (-not (Get-Command near -ErrorAction SilentlyContinue)) {
 
 function ConvertTo-NearJsonArg([object]$Value) {
   $json = ConvertTo-Json -InputObject $Value -Compress -Depth 20
-  return $json.Replace('"', '\"')
+
+  # PowerShell passes each item in the argument array as one CLI argument.
+  # Keep JSON quotes intact. Escaping them here sends literal backslashes to NEAR CLI.
+  try {
+    $null = ConvertFrom-Json -InputObject $json -ErrorAction Stop
+  } catch {
+    throw ("Failed to serialize NEAR JSON arguments: " + $_.Exception.Message)
+  }
+
+  return $json
 }
 
 function Invoke-NearRead([string]$Method, [object]$ArgsObject = @{}) {
@@ -112,7 +121,6 @@ if ($knownNonceConsumed -ne "true" -or $knownIntentConsumed -ne "true" -or $unus
 }
 
 Write-Host "Replay views confirmed: known nonce and intent consumed, unused values clear." -ForegroundColor Green
-
 
 # Replay the already-consumed intent with a fresh nonce, then replay a consumed nonce with a fresh intent ID.
 Invoke-NearTransaction "authorize_spend" @{
