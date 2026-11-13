@@ -283,7 +283,8 @@ document.addEventListener("submit",e=>{
  }
 });
 $("#mobile-menu").addEventListener("click",()=>$("#sidebar").classList.toggle("mobile-open"));
-$("#notifications").addEventListener("click",()=>toast("You're all caught up in this preview."));
+const notifications = $("#notifications");
+ if (notifications) notifications.addEventListener("click",()=>toast("You're all caught up in this preview."));
 $("#modal-layer").addEventListener("click",e=>{if(e.target.dataset.closeModal!==undefined)closeModal();});
 render();
 initializeWallet();
