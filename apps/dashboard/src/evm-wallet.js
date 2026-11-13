@@ -41,8 +41,29 @@ function publishState() {
 
 function addProvider(provider, info = {}) {
   if (!provider || typeof provider.request !== "function") return;
-  const key = info.uuid || info.rdns || info.name || provider;
-  providers.set(key, { provider, info, name: walletLabel(provider, info) });
+  const existing = [...providers.entries()].find(([, entry]) => entry.provider === provider);
+  if (existing) return;
+  const key = info.uuid || info.rdns || info.name || "injected-" + providers.size;
+  const entry = { provider, info, name: walletLabel(provider, info) };
+  providers.set(key, entry);
+  provider.on?.("accountsChanged", (accounts) => {
+    if (provider !== activeProvider) return;
+    activeAccount = Array.isArray(accounts) && typeof accounts[0] === "string" ? accounts[0] : null;
+    if (!activeAccount) {
+      disconnectProvider();
+      return;
+    }
+    setStatus(entry.name + " · " + activeAccount.slice(0, 6) + "…" + activeAccount.slice(-4), "success");
+    publishState();
+  });
+  provider.on?.("chainChanged", (chainId) => {
+    if (provider !== activeProvider) return;
+    publishState();
+    setStatus(entry.name + " · chain " + chainId, "success");
+  });
+  provider.on?.("disconnect", () => {
+    if (provider === activeProvider) disconnectProvider();
+  });
 }
 
 function discoverInjectedProviders() {
@@ -142,26 +163,7 @@ export function initializeEvmWallet() {
     if (menu && !menu.contains(event.target) && event.target !== button) menu.hidden = true;
   });
 
-  for (const entry of providers.values()) {
-    entry.provider.on?.("accountsChanged", (accounts) => {
-      if (entry.provider !== activeProvider) return;
-      activeAccount = Array.isArray(accounts) && typeof accounts[0] === "string" ? accounts[0] : null;
-      if (!activeAccount) {
-        disconnectProvider();
-        return;
-      }
-      setStatus(entry.name + " · " + activeAccount.slice(0, 6) + "…" + activeAccount.slice(-4), "success");
-      publishState();
-    });
-    entry.provider.on?.("chainChanged", (chainId) => {
-      if (entry.provider !== activeProvider) return;
-      publishState();
-      setStatus(entry.name + " · chain " + chainId, "success");
-    });
-    entry.provider.on?.("disconnect", () => {
-      if (entry.provider === activeProvider) disconnectProvider();
-    });
-  }
+
 
   setStatus("evm wallet not connected", "muted");
 }
