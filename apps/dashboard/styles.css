@@ -332,3 +332,20 @@ button:focus-visible,.nav-item:focus-visible,.btn:focus-visible{
 .evm-wallet-options button:hover{background:#ffffff0d}
 .evm-wallet-options img{width:19px;height:19px;object-fit:contain;border-radius:5px}
 @media(max-width:900px){.evm-wallet-status{display:none}.evm-wallet-connect{padding:0 8px}.evm-wallet-options{right:10px;top:54px}}
+
+
+/* Unified wallet selector */
+.wallet-picker{position:absolute;z-index:50;top:58px;right:70px;width:min(320px,calc(100vw - 28px));padding:14px;border:1px solid #ffffff20;border-radius:12px;background:#111820;box-shadow:0 20px 55px #000b}
+.wallet-picker[hidden]{display:none}
+.wallet-picker-head{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 12px;color:#f1e9e3;font-size:12px}
+.wallet-picker-head>button{border:0;background:transparent;color:#a9b3bc;font-size:20px;cursor:pointer}
+.wallet-picker-section{padding:10px 0 3px;border-top:1px solid #ffffff12}
+.wallet-picker-section>small{display:block;margin:0 0 8px 3px;color:#9b8c81;font:8px var(--mono);letter-spacing:1px}
+.wallet-choice{display:flex;width:100%;align-items:center;gap:10px;padding:10px;border:1px solid transparent;border-radius:8px;background:transparent;color:#e8edf2;text-align:left;cursor:pointer}
+.wallet-choice:hover{border-color:#ffffff18;background:#ffffff08}
+.wallet-choice>span:nth-child(2){display:flex;flex:1;flex-direction:column;gap:4px}
+.wallet-choice b{font-size:10px;font-weight:600}
+.wallet-choice small{color:#8d9aa4;font-size:8px}
+.wallet-choice-mark{display:grid;width:28px;height:28px;place-items:center;border-radius:8px;background:#49352d;color:#ffc19c;font-weight:800}
+.wallet-picker-empty{padding:7px 4px;color:#87939d;font-size:9px}
+@media(max-width:900px){.wallet-picker{right:8px;top:54px}}
