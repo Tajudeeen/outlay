@@ -104,26 +104,45 @@ export async function initializeWallet() {
     });
     connector.on("wallet:signIn", handleSignIn);
     connector.on("wallet:signOut", () => clearWallet());
-    button.addEventListener("click", async () => {
+    const picker = $("#wallet-picker");
+    const nearChoice = $("#connect-near-wallet");
+    const closePicker = $("#wallet-picker-close");
+    const openPicker = () => {
+      if (picker) picker.hidden = false;
+      button.setAttribute("aria-expanded", "true");
+    };
+    const hidePicker = () => {
+      if (picker) picker.hidden = true;
+      button.setAttribute("aria-expanded", "false");
+    };
+    button.addEventListener("click", () => {
+      if (accountId && wallet) {
+        busy = true;
+        setStatus("disconnecting wallet…", "pending");
+        Promise.resolve(wallet.signOut?.() ?? connector.disconnect?.())
+          .then(() => clearWallet())
+          .catch((error) => setStatus(error?.message || "wallet disconnect failed", "warning"))
+          .finally(() => { busy = false; });
+        return;
+      }
+      openPicker();
+    });
+    nearChoice?.addEventListener("click", async () => {
+      hidePicker();
       if (busy) return;
       busy = true;
-      setStatus("opening wallet…", "pending");
+      setStatus("opening near wallet…", "pending");
       try {
-        if (accountId && wallet) {
-          if (typeof wallet.signOut === "function") await wallet.signOut();
-          else if (typeof connector.disconnect === "function") await connector.disconnect();
-          await clearWallet();
-        } else {
-          await connector.connect();
-        }
+        await connector.connect();
       } catch (error) {
-        setStatus(error?.message || "wallet connection failed", "warning");
+        setStatus(error?.message || "near wallet connection failed", "warning");
       } finally {
         busy = false;
-        if (!accountId) setStatus("wallet not connected", "muted");
-        else setStatus(adminClient ? "contract owner verified" : "connected, management locked", adminClient ? "success" : "warning");
-        button.disabled = false;
       }
+    });
+    closePicker?.addEventListener("click", hidePicker);
+    document.addEventListener("click", (event) => {
+      if (picker && !picker.hidden && !picker.contains(event.target) && event.target !== button) hidePicker();
     });
     setStatus("wallet not connected", "muted");
   } catch {
