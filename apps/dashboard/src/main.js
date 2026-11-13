@@ -114,19 +114,7 @@ function execution(){
  return heading("SIGNING & SETTLEMENT","Execution boundary","Inspect the path from an approved decision to a constrained transaction. Signing stays locked until trust is proven.",'<span class="locked-chip">◇ SIGNER DISABLED</span>')+
  '<div class="execution-banner"><span class="lock-large">⌑</span><div><b>Execution is not enabled</b><p>Outlay currently authorizes intent and reserves policy budget. It does not sign, broadcast, transfer assets, or claim settlement.</p></div></div>'+
  '<div class="pipeline">'+[['01','Intent received','Schema + identity'],['02','Policy authorized','NEAR contract'],['03','Evidence verified','not implemented'],['04','Payload validated','validator only'],['05','Transaction signed','locked'],['06','Settlement observed','not implemented']].map((x,i)=>'<div class="pipe-step '+(i<2?"done":i===3?"partial":"locked")+'"><span class="pipe-number">'+x[0]+'</span><b>'+x[1]+'</b><small>'+x[2]+'</small><i>'+(i<2?"✓":i===3?"◐":"·")+'</i></div>').join("")+'</div>'+
- '<div class="execution-grid"><section class="panel">'+panelTitle("Trusted authorization evidence","Required before an envelope can be constructed")+'<div class="checklist">'+[['Decision exists at finalized block',true],['Policy and agent grant match',false],['Reservation is active and unreleased',false],['Nonce and intent are unused',false],['Block hash is consistent across reads',false],['Explicit asset mapping is approved',false]].map(([t,ok])=>'<div><span class="'+(ok?"check-ok":"check-pending")+'">'+(ok?"✓":"·")+'</span>'+t+badge(ok?"implemented":"not ready")+'</div>').join("")+'</div></section><section class="panel">'+panelTitle("Execution envelope","Illustrative shape only")+'<pre class="code-preview">{
-  "schemaVersion": 1,
-  "network": "near-testnet",
-  "decisionId": "dec_7c91a",
-  "authorizationBlock": {
-    "height": "128443921",
-    "hash": "pending trusted read"
-  },
-  "asset": "UNMAPPED",
-  "recipient": "merchant.near",
-  "amount": "UNMAPPED",
-  "actions": ["transfer"]
-}</pre><p class="micro-note">No transaction is constructed or signed. policy-unit cannot be converted into a real asset amount.</p></section></div>'+
+ '<div class="execution-grid"><section class="panel">'+panelTitle("Trusted authorization evidence","Required before an envelope can be constructed")+'<div class="checklist">'+[['Decision exists at finalized block',true],['Policy and agent grant match',false],['Reservation is active and unreleased',false],['Nonce and intent are unused',false],['Block hash is consistent across reads',false],['Explicit asset mapping is approved',false]].map(([t,ok])=>'<div><span class="'+(ok?"check-ok":"check-pending")+'">'+(ok?"✓":"·")+'</span>'+t+badge(ok?"implemented":"not ready")+'</div>').join("")+'</div></section><section class="panel">'+panelTitle("Execution envelope","Illustrative shape only")+'<pre class="code-preview">'+JSON.stringify({schemaVersion:1,network:"near-testnet",decisionId:"dec_7c91a",authorizationBlock:{height:"128443921",hash:"pending trusted read"},asset:"UNMAPPED",recipient:"merchant.near",amount:"UNMAPPED",actions:["transfer"]},null,2)+'</pre><p class="micro-note">No transaction is constructed or signed. policy-unit cannot be converted into a real asset amount.</p></section></div>'+
  '<div class="info-callout danger-callout"><span>!</span><div><b>Security gate</b><p>Do not connect a signer until the trusted evidence adapter, explicit asset denomination, reservation cancellation semantics, replay protection, signer payload tests, and independent review are complete.</p></div></div>';
 }
 function audit(){
@@ -184,7 +172,19 @@ function bindFilters(){
  bind("decision-search",null,()=>$("#decision-table").innerHTML=decisionTable(state.decisions.filter(a=>(a.id+a.intent+a.agent+a.destination).toLowerCase().includes($("#decision-search").value.toLowerCase())&&($("#decision-filter").value==="All outcomes"||a.result===$("#decision-filter").value))));
  bind("decision-filter",null,()=>$("#decision-table").innerHTML=decisionTable(state.decisions.filter(a=>(a.id+a.intent+a.agent+a.destination).toLowerCase().includes(($("#decision-search")?.value||"").toLowerCase())&&($("#decision-filter").value==="All outcomes"||a.result===$("#decision-filter").value))));
  bind("audit-search",null,()=>$("#audit-table").innerHTML=auditTable(state.audit.filter(a=>a.join(" ").toLowerCase().includes($("#audit-search").value.toLowerCase()))));
- bind("audit-filter",null,()=>$("#audit-table").innerHTML=auditTable(state.audit.filter(a=>a.join(" ").toLowerCase().includes(($("#audit-search")?.value||"").toLowerCase())&&($("#audit-filter").value==="All event types"||($("#audit-filter").value==="Authorization"?a[1].toLowerCase().includes("authorization"):$("#audit-filter").value==="Access"?a[1].toLowerCase().includes("agent")||a[1].toLowerCase().includes("key"):a[1].toLowerCase().includes("policy")))));
+ bind("audit-filter",null,()=>{
+  const query=($("#audit-search")?.value||"").toLowerCase();
+  const kind=$("#audit-filter").value;
+  const rows=state.audit.filter(row=>{
+   const searchable=row.join(" ").toLowerCase();
+   const typeMatch=kind==="All event types"||
+    (kind==="Authorization"&&searchable.includes("authorization"))||
+    (kind==="Access"&&(searchable.includes("agent")||searchable.includes("key")))||
+    (kind==="Policy"&&searchable.includes("policy"));
+   return searchable.includes(query)&&typeMatch;
+  });
+  $("#audit-table").innerHTML=auditTable(rows);
+ });
 }
 
 function openModal(title,eyebrow,body){$("#modal-title").textContent=title;$("#modal-eyebrow").textContent=eyebrow;$("#modal-body").innerHTML=body;$("#modal-layer").hidden=false;document.body.classList.add("modal-open");}
