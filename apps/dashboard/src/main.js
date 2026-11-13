@@ -1,3 +1,4 @@
+import { loadContractSnapshot } from "./near-rpc.js";
 const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 const state = {
@@ -65,6 +66,7 @@ function overview(){
  metric("ACTIVE AGENTS","3","Out of 4 registered","1 agent currently disabled","violet")+
  metric("REQUESTS TODAY","24","18 authorized · 4 denied","2 need human review","amber")+
  '</div>'+
+ '<section class="panel live-snapshot-panel" id="chain-snapshot">'+panelTitle("Finalized contract state","Live NEAR testnet reads · pinned to one block",'<button class="text-btn" data-action="refresh-live">↻ refresh</button>')+'<div class="live-snapshot-loading"><span class="live-pulse"></span> reading finalized contract state…</div></section>'+
  '<div class="overview-grid"><section class="panel span-2">'+panelTitle("Authorization activity","Request outcomes · preview data",'<span class="period-select">Last 7 days⌄</span>')+
  '<div class="chart-area"><div class="chart-y"><span>40</span><span>30</span><span>20</span><span>10</span><span>0</span></div><div class="chart"><div class="chart-grid"></div><div class="bars">'+[22,30,18,35,26,38,29].map((v,i)=>'<div class="bar-group"><div class="bar-stack"><i style="height:'+v*1.6+'px"></i><i style="height:'+(v*.5)*1.6+'px"></i><i style="height:'+(v*.22)*1.6+'px"></i></div><small>'+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i]+'</small></div>').join("")+'</div></div></div><div class="chart-legend"><span><i class="legend-green"></i>Authorized</span><span><i class="legend-amber"></i>Review</span><span><i class="legend-red"></i>Denied</span></div></section>'+
  '<section class="panel"><div class="panel-title"><div><h3>Decision breakdown</h3><p>Last 7 days</p></div><span class="tiny-tag">PREVIEW</span></div><div class="donut-wrap"><div class="donut"><div><b>86%</b><small>allowed</small></div></div><div class="donut-legend"><span><i class="legend-green"></i>Authorized <b>86</b></span><span><i class="legend-amber"></i>Review <b>8</b></span><span><i class="legend-red"></i>Denied <b>6</b></span></div></div></section>'+
@@ -160,7 +162,41 @@ function render(){
  const view={overview,policies,agents,intents,decisions,risk,execution,audit,settings}[state.page]()+pageSupplement();
  $("#page-content").innerHTML=view;
  bindFilters();
+ if(state.page==="overview") refreshContractSnapshot();
 }
+
+let liveSnapshotSequence=0;
+function safeText(value){
+ return String(value).replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+}
+async function refreshContractSnapshot(showToast=false){
+ const panel=$("#chain-snapshot");
+ if(!panel)return;
+ const sequence=++liveSnapshotSequence;
+ const refresh=panel.querySelector('[data-action="refresh-live"]');
+ if(refresh){refresh.disabled=true;refresh.textContent="↻ refreshing";}
+ try{
+  const snapshot=await loadContractSnapshot();
+  if(sequence!==liveSnapshotSequence||!$("#chain-snapshot"))return;
+  const policy=snapshot.policy;
+  const grant=snapshot.grant;
+  const stateLabel=policy?(policy.enabled?"enabled":"disabled"):"not found";
+  const agentLabel=grant?(grant.enabled?"enabled":"disabled"):"not found";
+  panel.innerHTML='<div class="panel-title"><div><h3>Finalized contract state</h3><p>Live NEAR testnet reads · one consistent finalized block</p></div><button class="text-btn" data-action="refresh-live">↻ refresh</button></div>'+
+   '<div class="live-snapshot-grid">'+
+   '<div><small>DECISIONS RECORDED</small><strong>'+safeText(snapshot.decisionCount)+'</strong><em>contract counter</em></div>'+
+   '<div><small>POLICY · '+safeText(snapshot.policyId)+'</small><strong>'+safeText(stateLabel)+'</strong><em>version '+safeText(snapshot.policyVersion)+'</em></div>'+
+   '<div><small>RESERVED BUDGET</small><strong>'+safeText(snapshot.reserved)+' <i>units</i></strong><em>of '+safeText(policy?.max_total??"unknown")+' total units</em></div>'+
+   '<div><small>AGENT · '+safeText(snapshot.agentId)+'</small><strong>'+safeText(agentLabel)+'</strong><em>grant bound to '+safeText(grant?.policy_id??"no policy")+'</em></div>'+
+   '</div><div class="live-snapshot-foot"><span><i></i> FINALIZED SNAPSHOT</span><span>BLOCK '+safeText(snapshot.blockHeight)+' · '+safeText(snapshot.blockHash.slice(0,12))+'…</span><a href="./live.html">inspect full contract ↗</a></div>';
+  if(showToast)toast("Finalized NEAR contract state refreshed.");
+ }catch(error){
+  if(sequence!==liveSnapshotSequence||!$("#chain-snapshot"))return;
+  panel.innerHTML='<div class="panel-title"><div><h3>Finalized contract state</h3><p>Live NEAR testnet reads · read-only</p></div><button class="text-btn" data-action="refresh-live">↻ retry</button></div><div class="live-snapshot-error"><b>Live state unavailable</b><p>'+safeText(error?.message||"Could not read the contract.")+'</p><a href="./live.html">open contract inspector ↗</a></div>';
+  if(showToast)toast("Could not refresh contract state. See the live inspector for details.");
+ }
+}
+
 function bindFilters(){
  const bind=(id,filter,draw)=>{const el=$("#"+id);if(el){el.addEventListener("input",draw);el.addEventListener("change",draw);}};
  bind("policy-search",null,()=>$("#policy-table").innerHTML=policyTable(state.policies.filter(p=>(p.name+p.id+p.scope).toLowerCase().includes($("#policy-search").value.toLowerCase())&&($("#policy-filter").value==="All policies"||p.status===$("#policy-filter").value))));
@@ -204,6 +240,7 @@ function toast(message){const node=document.createElement("div");node.className=
 function download(name,content,type="text/csv"){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
 function exportRows(rows){return rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(",")).join("\n");}
 function handleAction(action,id){
+ if(action==="refresh-live")return refreshContractSnapshot(true);
  if(action==="new-policy")return newPolicy();
  if(action==="new-agent")return newAgent();
  if(action==="new-intent")return newIntent();
