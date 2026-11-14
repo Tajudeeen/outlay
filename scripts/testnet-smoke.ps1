@@ -28,13 +28,23 @@ function Invoke-NearRead([string]$Method, [object]$ArgsObject = @{}) {
     "contract", "call-function", "as-read-only", $ContractAccount,
     $Method, "json-args", $json, "network-config", "testnet", "now"
   )
-  $output = & near @arguments 2>&1
-  $exitCode = $LASTEXITCODE
-  $text = ($output | Out-String)
-  if ($exitCode -ne 0 -or $text -match "Error:|ERROR") {
+  $stderrPath = [System.IO.Path]::GetTempFileName()
+  try {
+    $output = & near @arguments 2> $stderrPath
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $stderr = Get-Content -LiteralPath $stderrPath -Raw -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $stderrPath -Force -ErrorAction SilentlyContinue
+  }
+  $text = (($output | Out-String) + [Environment]::NewLine + $stderr)
+  if ($exitCode -ne 0 -or $text -match '(?im)^\s*(Error:|ERROR)') {
     throw ("Read-only call " + $Method + " failed:" + [Environment]::NewLine + $text)
   }
-  $match = [regex]::Match($text, 'Function execution return value \(printed to stdout\):\s*([^\r\n]+)')
+
+  $match = [regex]::Match($text, '(?m)Function execution return value \(printed to stdout\):\s*([^\r\n]+)')
+  if (-not $match.Success) {
+    $match = [regex]::Match($text, '(?m)^\s*(true|false|-?\d+)\s*$')
+  }
   if (-not $match.Success) {
     throw ("Could not parse read-only result for " + $Method + ":" + [Environment]::NewLine + $text)
   }
@@ -58,12 +68,18 @@ function Invoke-NearTransaction(
   )
   Write-Host ""
   Write-Host ("=== " + $Label + " ===") -ForegroundColor Cyan
-  $output = & near @arguments 2>&1
-  $exitCode = $LASTEXITCODE
-  $text = ($output | Out-String)
+  $stderrPath = [System.IO.Path]::GetTempFileName()
+  try {
+    $output = & near @arguments 2> $stderrPath
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $stderr = Get-Content -LiteralPath $stderrPath -Raw -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $stderrPath -Force -ErrorAction SilentlyContinue
+  }
+  $text = (($output | Out-String) + [Environment]::NewLine + $stderr)
   Write-Host $text
 
-  $failed = $text -match "ERROR Transaction failed|WebAssembly trap|ExecutionError|FunctionCallError"
+  $failed = ($exitCode -ne 0) -or ($text -match "ERROR Transaction failed|WebAssembly trap|ExecutionError|FunctionCallError")
   if ($ExpectFailure -and -not $failed) {
     throw ("Expected " + $Label + " to be rejected, but the CLI did not report a failed execution.")
   }
