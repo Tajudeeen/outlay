@@ -59,12 +59,18 @@ const server = createServer(async (incoming, outgoing) => {
   }
 });
 
+server.requestTimeout = 15_000;
+server.headersTimeout = 10_000;
+server.keepAliveTimeout = 5_000;
+
 server.listen(port, "0.0.0.0", () => {
   process.stdout.write(`outlay-api listening on :${port}\n`);
 });
 
 async function shutdown(): Promise<void> {
-  server.close();
+  await new Promise<void>((resolve) => {
+    server.close(() => resolve());
+  });
   await pool.end();
 }
 process.on("SIGINT", () => { void shutdown().finally(() => process.exit(0)); });

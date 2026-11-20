@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const accountId = z.string().min(2).max(64).regex(/^[a-z0-9._-]+$/);
+const accountId = z.string().min(2).max(64).regex(/^(?=.{2,64}$)(([a-z0-9]+[._-])*[a-z0-9]+)$/);
 const identifier = z.string().min(1).max(128).regex(/^[A-Za-z0-9._-]+$/);
 const decimal = z.string().regex(/^(0|[1-9][0-9]*)$/);
 const U64_MAX = 18_446_744_073_709_551_615n;

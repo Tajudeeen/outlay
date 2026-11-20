@@ -1,9 +1,13 @@
 name: typescript
 
+permissions:
+  contents: read
+
 on:
   push:
     paths:
       - "package.json"
+      - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - "services/**"
       - "apps/**"
@@ -11,6 +15,7 @@ on:
   pull_request:
     paths:
       - "package.json"
+      - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - "services/**"
       - "apps/**"
@@ -44,8 +49,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install
-        run: pnpm install --no-frozen-lockfile
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: Build shared policy package
         run: pnpm --filter @outlay/policy build
       - name: Typecheck policy service

@@ -25,7 +25,7 @@ export function parseNearJson(source: string): unknown {
       continue;
     }
     if (character === "-" || (character >= "0" && character <= "9")) {
-      const match = /^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/.exec(source.slice(index));
+      const match = /^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/.exec(source.slice(index));
       if (!match) throw new Error("INVALID_NEAR_JSON_NUMBER");
       const token = match[0];
       normalized += /[.eE]/.test(token) ? token : JSON.stringify(token);

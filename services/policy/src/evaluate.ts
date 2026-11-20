@@ -38,6 +38,7 @@ export function evaluatePreflight(
   policy: PolicySnapshot | null,
   nowNs: string,
 ): PreflightResult {
+  if (intent.network !== "near-testnet") return { allowed: false, reasonCode: "NETWORK_MISMATCH" };
   if (!agent) return { allowed: false, reasonCode: "AGENT_UNKNOWN" };
   if (!agent.enabled) return { allowed: false, reasonCode: "AGENT_DISABLED" };
   if (agent.agentId !== intent.agentId) return { allowed: false, reasonCode: "AGENT_MISMATCH" };

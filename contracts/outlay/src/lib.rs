@@ -264,6 +264,13 @@ impl Outlay {
         self.owner.clone()
     }
 
+    /// Allows the current owner to transfer contract ownership to a new account.
+    pub fn transfer_ownership(&mut self, new_owner: AccountId) {
+        self.assert_owner();
+        require!(new_owner != self.owner, "SAME_OWNER");
+        self.owner = new_owner;
+    }
+
     pub fn get_decision(&self, decision_id: String) -> Option<SpendDecision> {
         self.decisions.get(&decision_id).cloned()
     }
@@ -287,7 +294,10 @@ impl Outlay {
     /// Read-only replay checks for advisory API preflight. Contract authorization
     /// still performs the authoritative checks atomically during submission.
     pub fn is_nonce_consumed(&self, agent_id: AccountId, nonce: String) -> bool {
-        let parsed_nonce = nonce.parse::<u64>().expect("INVALID_NONCE");
+        let parsed_nonce = match nonce.parse::<u64>() {
+            Ok(val) => val,
+            Err(_) => return false,
+        };
         self.consumed_nonces.contains(&format!("{}:{}", agent_id, parsed_nonce))
     }
 
@@ -833,4 +843,45 @@ mod tests {
         assert!(!contract.is_intent_consumed(account("agent.testnet"), "overflow-u128".into()));
     }
 
+    #[test]
+    fn owner_can_transfer_ownership() {
+        let mut contract = setup();
+        assert_eq!(contract.get_owner(), account("owner.testnet"));
+
+        context(account("owner.testnet"), 30);
+        contract.transfer_ownership(account("new-owner.testnet"));
+        assert_eq!(contract.get_owner(), account("new-owner.testnet"));
+
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            contract.register_agent(account("another-agent.testnet"), "daily".into());
+        }));
+        assert!(result.is_err());
+
+        context(account("new-owner.testnet"), 31);
+        contract.register_agent(account("another-agent.testnet"), "daily".into());
+        assert!(contract.get_agent_grant(account("another-agent.testnet")).is_some());
+    }
+
+    #[test]
+    #[should_panic(expected = "OWNER_ONLY")]
+    fn non_owner_cannot_transfer_ownership() {
+        let mut contract = setup();
+        context(account("attacker.testnet"), 30);
+        contract.transfer_ownership(account("attacker.testnet"));
+    }
+
+    #[test]
+    #[should_panic(expected = "SAME_OWNER")]
+    fn cannot_transfer_ownership_to_self() {
+        let mut contract = setup();
+        context(account("owner.testnet"), 30);
+        contract.transfer_ownership(account("owner.testnet"));
+    }
+
+    #[test]
+    fn is_nonce_consumed_returns_false_on_invalid_numeric_nonce() {
+        let contract = setup();
+        assert!(!contract.is_nonce_consumed(account("agent.testnet"), "not-a-number".into()));
+        assert!(!contract.is_nonce_consumed(account("agent.testnet"), "-1".into()));
+    }
 }

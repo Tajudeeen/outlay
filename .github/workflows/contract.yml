@@ -1,14 +1,19 @@
 name: contract
 
+permissions:
+  contents: read
+
 on:
   push:
     paths:
       - "Cargo.toml"
+      - "rust-toolchain.toml"
       - "contracts/**"
       - ".github/workflows/contract.yml"
   pull_request:
     paths:
       - "Cargo.toml"
+      - "rust-toolchain.toml"
       - "contracts/**"
       - ".github/workflows/contract.yml"
 
@@ -20,13 +25,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
-      - name: Format
-        run: cargo fmt --all
+      - name: Format check
+        run: cargo fmt --all -- --check
+      - name: Lint (Clippy)
+        run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Unit tests
         run: cargo test --workspace
       - name: Build contract wasm
         run: cargo build -p outlay-contract --target wasm32-unknown-unknown --release
+      - name: Record WASM hash
+        run: sha256sum target/wasm32-unknown-unknown/release/outlay_contract.wasm
       - name: Upload contract wasm
         uses: actions/upload-artifact@v4
         with:

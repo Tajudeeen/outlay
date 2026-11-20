@@ -24,6 +24,9 @@ export interface OutlayStore extends AgentCredentialStore {
 }
 
 export class PgOutlayStore implements OutlayStore {
+  private lastRateLimitCleanup = 0;
+  private lastIdempotencyCleanup = 0;
+
   constructor(private readonly pool: Pool) {}
 
   async findByKeyHash(keyHash: string): Promise<AgentCredentialRecord | null> {
@@ -107,8 +110,9 @@ export class PgOutlayStore implements OutlayStore {
   }
 
   async consumeRateLimit(agentId: string, windowStart: number, limit: number): Promise<boolean> {
-    // Opportunistic daily cleanup keeps fixed-window counters bounded.
-    if (windowStart % 1440 === 0) {
+    // Periodic cleanup keeps fixed-window counters bounded without relying on exact-minute hits.
+    if (windowStart - this.lastRateLimitCleanup >= 60) {
+      this.lastRateLimitCleanup = windowStart;
       await this.pool.query("DELETE FROM agent_rate_limits WHERE window_start < $1", [windowStart - 1440]);
     }
     const result = await this.pool.query<{ request_count: number }>(
@@ -146,7 +150,11 @@ export class PgOutlayStore implements OutlayStore {
     response: unknown,
     expiresAt: Date,
   ): Promise<boolean> {
-    await this.pool.query("DELETE FROM idempotency_records WHERE expires_at <= NOW()");
+    const now = Date.now();
+    if (now - this.lastIdempotencyCleanup >= 60_000) {
+      this.lastIdempotencyCleanup = now;
+      await this.pool.query("DELETE FROM idempotency_records WHERE expires_at <= NOW()");
+    }
     const result = await this.pool.query(
       `INSERT INTO idempotency_records
        (agent_id, idempotency_key, request_hash, response_status, response_json, expires_at)

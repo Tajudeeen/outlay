@@ -1,5 +1,13 @@
 # Outlay security model
 
+## Vulnerability Reporting
+
+If you believe you have discovered a security vulnerability in Outlay, please report it privately:
+
+- **GitHub Security Advisory**: Open a private advisory report through the repository's [Security Advisories](https://github.com/Tajudeeen/outlay/security/advisories) page.
+- **Details to provide**: Please include the affected component, description of the vulnerability, reproduction steps, and potential impact.
+- **Coordinated disclosure**: Please allow reasonable time for investigation and remediation before any public disclosure. Do not open public GitHub issues for security vulnerabilities.
+
 ## Status
 
 This is an initial threat model, not an audit. Outlay is early engineering. No funds should be entrusted to it based on this document.

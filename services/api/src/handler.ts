@@ -12,7 +12,7 @@ import type { OutlayStore } from "./store.js";
 
 const MAX_BODY_BYTES = 16 * 1024;
 const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
-const ACCOUNT_ID = /^[a-z0-9._-]{2,64}$/;
+const ACCOUNT_ID = /^(?=.{2,64}$)(([a-z0-9]+[._-])*[a-z0-9]+)$/;
 const IDEMPOTENCY_KEY = /^[A-Za-z0-9._:-]{8,128}$/;
 
 type ApiDependencies = {

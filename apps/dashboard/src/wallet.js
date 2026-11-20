@@ -1,4 +1,4 @@
-import { NearConnector } from "https://esm.sh/@hot-labs/near-connect@0.12.0?bundle";
+import { NearConnector } from "./vendor/near-connect.js";
 import { callView } from "./near-rpc.js";
 import { createAdminClient } from "./admin-transactions.js";
 

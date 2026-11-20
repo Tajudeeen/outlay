@@ -14,6 +14,13 @@ test("preserves large integer tokens exactly", () => {
   assert.equal(parsed.label, "amount 25");
 });
 
+test("parses decimal floats and scientific notation without corrupting tokens", () => {
+  const parsed = parseNearJson('{"ratio":1.5,"rate":0.0025,"scientific":1e6}');
+  assert.equal(parsed.ratio, 1.5);
+  assert.equal(parsed.rate, 0.0025);
+  assert.equal(parsed.scientific, 1000000);
+});
+
 test("decodes NEAR view return bytes", () => {
   const bytes = Array.from(new TextEncoder().encode('{"enabled":true,"max_total":100}'));
   assert.deepEqual(decodeNearResult(bytes), { enabled: true, max_total: "100" });

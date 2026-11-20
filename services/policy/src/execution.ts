@@ -6,7 +6,7 @@ import { z } from "zod";
  * verified authorization facts. It does not sign, broadcast, or settle.
  * The asset mapping is explicit configuration, never inferred from policy-unit.
  */
-const accountId = z.string().min(2).max(64).regex(/^[a-z0-9._-]+$/);
+const accountId = z.string().min(2).max(64).regex(/^(?=.{2,64}$)(([a-z0-9]+[._-])*[a-z0-9]+)$/);
 const identifier = z.string().min(1).max(128).regex(/^[A-Za-z0-9._-]+$/);
 const decimal = z.string().regex(/^(0|[1-9][0-9]*)$/);
 const U64_MAX = 18_446_744_073_709_551_615n;
@@ -111,6 +111,10 @@ export function validateExecutionEnvelope(input: {
 
   if (input.network !== "near-testnet" || mapping.network !== input.network) {
     return fail("NETWORK_MISMATCH");
+  }
+
+  if (!identifier.safeParse(input.executionAttemptId).success) {
+    return fail("EXECUTION_ATTEMPT_ID_INVALID");
   }
 
   const authorizationResult = VerifiedAuthorizationSchema.safeParse(input.authorization);
