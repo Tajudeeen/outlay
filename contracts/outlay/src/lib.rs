@@ -84,7 +84,9 @@ impl Outlay {
         require!(!policy_id.is_empty(), "POLICY_ID_EMPTY");
         require!(
             policy_id.len() <= MAX_POLICY_ID_BYTES
-                && policy_id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.'),
+                && policy_id
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.'),
             "POLICY_ID_INVALID"
         );
         require!(
@@ -92,10 +94,19 @@ impl Outlay {
             "TOO_MANY_DESTINATIONS"
         );
         require!(policy.max_per_transaction > 0, "MAX_TX_ZERO");
-        require!(policy.max_total >= policy.max_per_transaction, "INVALID_BUDGET");
+        require!(
+            policy.max_total >= policy.max_per_transaction,
+            "INVALID_BUDGET"
+        );
         let currently_reserved = self.spend_by_policy.get(&policy_id).copied().unwrap_or(0);
-        require!(policy.max_total >= currently_reserved, "BUDGET_BELOW_RESERVED");
-        require!(!policy.allowed_destinations.is_empty(), "DESTINATIONS_EMPTY");
+        require!(
+            policy.max_total >= currently_reserved,
+            "BUDGET_BELOW_RESERVED"
+        );
+        require!(
+            !policy.allowed_destinations.is_empty(),
+            "DESTINATIONS_EMPTY"
+        );
         let next_version = self
             .policy_versions
             .get(&policy_id)
@@ -144,9 +155,14 @@ impl Outlay {
         let agent_id = env::predecessor_account_id();
         let now = env::block_timestamp();
         require!(amount > 0, "AMOUNT_ZERO");
-        require!(!intent_id.is_empty() && intent_id.len() <= 128, "INTENT_ID_INVALID");
         require!(
-            intent_id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.'),
+            !intent_id.is_empty() && intent_id.len() <= 128,
+            "INTENT_ID_INVALID"
+        );
+        require!(
+            intent_id
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.'),
             "INTENT_ID_INVALID"
         );
 
@@ -165,9 +181,18 @@ impl Outlay {
         require!(policy.enabled, "POLICY_DISABLED");
         require!(now < policy.expires_at_ns, "POLICY_EXPIRED");
         require!(now < intent_expires_at_ns, "INTENT_EXPIRED");
-        require!(intent_expires_at_ns <= policy.expires_at_ns, "INTENT_OUTLIVES_POLICY");
+        require!(
+            intent_expires_at_ns <= policy.expires_at_ns,
+            "INTENT_OUTLIVES_POLICY"
+        );
         require!(amount <= policy.max_per_transaction, "TX_LIMIT_EXCEEDED");
-        require!(policy.allowed_destinations.iter().any(|d| d == &destination), "DESTINATION_DENIED");
+        require!(
+            policy
+                .allowed_destinations
+                .iter()
+                .any(|d| d == &destination),
+            "DESTINATION_DENIED"
+        );
 
         let policy_version = self
             .policy_versions
@@ -178,7 +203,10 @@ impl Outlay {
         let nonce_key = format!("{}:{}", agent_id, nonce);
         require!(!self.consumed_nonces.contains(&nonce_key), "NONCE_REPLAY");
         let intent_key = format!("{}:{}", agent_id, intent_id);
-        require!(!self.consumed_intents.contains(&intent_key), "INTENT_REPLAY");
+        require!(
+            !self.consumed_intents.contains(&intent_key),
+            "INTENT_REPLAY"
+        );
 
         let spent = self
             .spend_by_policy
@@ -191,8 +219,7 @@ impl Outlay {
         // State changes occur only after all validation checks pass.
         self.consumed_nonces.insert(nonce_key);
         self.consumed_intents.insert(intent_key);
-        self
-            .spend_by_policy
+        self.spend_by_policy
             .insert(grant.policy_id.clone(), next_spend);
         self.decision_count = self
             .decision_count
@@ -235,7 +262,10 @@ impl Outlay {
             .get(&decision_id)
             .cloned()
             .expect("DECISION_NOT_FOUND");
-        require!(now >= decision.intent_expires_at_ns, "RESERVATION_NOT_EXPIRED");
+        require!(
+            now >= decision.intent_expires_at_ns,
+            "RESERVATION_NOT_EXPIRED"
+        );
         require!(
             !self.released_reservations.contains(&decision_id),
             "RESERVATION_ALREADY_RELEASED"
@@ -298,11 +328,13 @@ impl Outlay {
             Ok(val) => val,
             Err(_) => return false,
         };
-        self.consumed_nonces.contains(&format!("{}:{}", agent_id, parsed_nonce))
+        self.consumed_nonces
+            .contains(&format!("{}:{}", agent_id, parsed_nonce))
     }
 
     pub fn is_intent_consumed(&self, agent_id: AccountId, intent_id: String) -> bool {
-        self.consumed_intents.contains(&format!("{}:{}", agent_id, intent_id))
+        self.consumed_intents
+            .contains(&format!("{}:{}", agent_id, intent_id))
     }
 
     pub fn get_policy_spend(&self, policy_id: String) -> u128 {
@@ -337,13 +369,16 @@ mod tests {
     fn setup() -> Outlay {
         context(account("owner.testnet"), 10);
         let mut contract = Outlay::new();
-        contract.set_policy("daily".into(), Policy {
-            enabled: true,
-            expires_at_ns: 1_000,
-            max_per_transaction: 60,
-            max_total: 100,
-            allowed_destinations: vec![account("merchant.testnet")],
-        });
+        contract.set_policy(
+            "daily".into(),
+            Policy {
+                enabled: true,
+                expires_at_ns: 1_000,
+                max_per_transaction: 60,
+                max_total: 100,
+                allowed_destinations: vec![account("merchant.testnet")],
+            },
+        );
         contract.register_agent(account("agent.testnet"), "daily".into());
         contract
     }
@@ -358,23 +393,28 @@ mod tests {
     fn policy_updates_increment_version_without_resetting_reservations() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        let first = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 30, 1, 500);
+        let first =
+            contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 30, 1, 500);
         assert_eq!(first.policy_version, 1);
         assert_eq!(contract.get_policy_spend("daily".into()), 30);
 
         context(account("owner.testnet"), 25);
-        contract.set_policy("daily".into(), Policy {
-            enabled: true,
-            expires_at_ns: 1_000,
-            max_per_transaction: 50,
-            max_total: 100,
-            allowed_destinations: vec![account("merchant.testnet")],
-        });
+        contract.set_policy(
+            "daily".into(),
+            Policy {
+                enabled: true,
+                expires_at_ns: 1_000,
+                max_per_transaction: 50,
+                max_total: 100,
+                allowed_destinations: vec![account("merchant.testnet")],
+            },
+        );
         assert_eq!(contract.get_policy_version("daily".into()), 2);
         assert_eq!(contract.get_policy_spend("daily".into()), 30);
 
         context(account("agent.testnet"), 30);
-        let second = contract.authorize_spend("intent-2".into(), account("merchant.testnet"), 20, 2, 500);
+        let second =
+            contract.authorize_spend("intent-2".into(), account("merchant.testnet"), 20, 2, 500);
         assert_eq!(second.policy_version, 2);
         assert_eq!(contract.get_policy_spend("daily".into()), 50);
     }
@@ -383,7 +423,8 @@ mod tests {
     fn authorized_spend_reserves_budget_and_consumes_nonce() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        let decision = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 1, 500);
+        let decision =
+            contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 1, 500);
         assert_eq!(decision.amount, 40);
         assert_eq!(contract.get_policy_spend("daily".into()), 40);
         assert_eq!(contract.get_decision_count(), 1);
@@ -436,8 +477,20 @@ mod tests {
     fn intent_replay_is_denied_even_with_new_nonce() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        contract.authorize_spend("same-intent".into(), account("merchant.testnet"), 10, 7, 500);
-        contract.authorize_spend("same-intent".into(), account("merchant.testnet"), 10, 8, 500);
+        contract.authorize_spend(
+            "same-intent".into(),
+            account("merchant.testnet"),
+            10,
+            7,
+            500,
+        );
+        contract.authorize_spend(
+            "same-intent".into(),
+            account("merchant.testnet"),
+            10,
+            8,
+            500,
+        );
     }
 
     #[test]
@@ -463,13 +516,16 @@ mod tests {
     fn non_owner_cannot_change_policy() {
         let mut contract = setup();
         context(account("attacker.testnet"), 30);
-        contract.set_policy("daily".into(), Policy {
-            enabled: true,
-            expires_at_ns: 1_000,
-            max_per_transaction: 60,
-            max_total: 100,
-            allowed_destinations: vec![account("merchant.testnet")],
-        });
+        contract.set_policy(
+            "daily".into(),
+            Policy {
+                enabled: true,
+                expires_at_ns: 1_000,
+                max_per_transaction: 60,
+                max_total: 100,
+                allowed_destinations: vec![account("merchant.testnet")],
+            },
+        );
     }
 
     #[test]
@@ -477,20 +533,24 @@ mod tests {
     fn policy_id_rejects_unsafe_event_characters() {
         let mut contract = setup();
         context(account("owner.testnet"), 30);
-        contract.set_policy("bad/id".into(), Policy {
-            enabled: true,
-            expires_at_ns: 1_000,
-            max_per_transaction: 60,
-            max_total: 100,
-            allowed_destinations: vec![account("merchant.testnet")],
-        });
+        contract.set_policy(
+            "bad/id".into(),
+            Policy {
+                enabled: true,
+                expires_at_ns: 1_000,
+                max_per_transaction: 60,
+                max_total: 100,
+                allowed_destinations: vec![account("merchant.testnet")],
+            },
+        );
     }
 
     #[test]
     fn expired_reservation_can_be_released_once_by_owner() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        let decision = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
+        let decision =
+            contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
         assert_eq!(contract.get_policy_spend("daily".into()), 40);
 
         context(account("owner.testnet"), 500);
@@ -504,7 +564,8 @@ mod tests {
     fn releasing_reservation_does_not_restore_intent_id() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        let decision = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
+        let decision =
+            contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
         context(account("owner.testnet"), 500);
         contract.release_expired_reservation(decision.decision_id);
         context(account("agent.testnet"), 501);
@@ -516,7 +577,8 @@ mod tests {
     fn reservation_cannot_be_released_before_expiry() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        let decision = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
+        let decision =
+            contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
         context(account("owner.testnet"), 499);
         contract.release_expired_reservation(decision.decision_id);
     }
@@ -526,7 +588,8 @@ mod tests {
     fn reservation_cannot_be_released_twice() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        let decision = contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
+        let decision =
+            contract.authorize_spend("intent-1".into(), account("merchant.testnet"), 40, 9, 500);
         context(account("owner.testnet"), 500);
         contract.release_expired_reservation(decision.decision_id.clone());
         contract.release_expired_reservation(decision.decision_id);
@@ -549,7 +612,13 @@ mod tests {
         policy.enabled = false;
         contract.set_policy("daily".into(), policy);
         context(account("agent.testnet"), 30);
-        contract.authorize_spend("disabled-policy".into(), account("merchant.testnet"), 10, 1, 500);
+        contract.authorize_spend(
+            "disabled-policy".into(),
+            account("merchant.testnet"),
+            10,
+            1,
+            500,
+        );
     }
 
     #[test]
@@ -561,7 +630,13 @@ mod tests {
         policy.expires_at_ns = 20;
         contract.set_policy("daily".into(), policy);
         context(account("agent.testnet"), 21);
-        contract.authorize_spend("expired-policy".into(), account("merchant.testnet"), 10, 1, 500);
+        contract.authorize_spend(
+            "expired-policy".into(),
+            account("merchant.testnet"),
+            10,
+            1,
+            500,
+        );
     }
 
     #[test]
@@ -569,7 +644,13 @@ mod tests {
     fn intent_cannot_outlive_policy() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        contract.authorize_spend("long-intent".into(), account("merchant.testnet"), 10, 1, 1_001);
+        contract.authorize_spend(
+            "long-intent".into(),
+            account("merchant.testnet"),
+            10,
+            1,
+            1_001,
+        );
     }
 
     #[test]
@@ -577,7 +658,13 @@ mod tests {
     fn unregistered_agent_is_denied() {
         let mut contract = setup();
         context(account("stranger.testnet"), 20);
-        contract.authorize_spend("unknown-agent".into(), account("merchant.testnet"), 10, 1, 500);
+        contract.authorize_spend(
+            "unknown-agent".into(),
+            account("merchant.testnet"),
+            10,
+            1,
+            500,
+        );
     }
 
     #[test]
@@ -585,16 +672,25 @@ mod tests {
     fn policy_budget_cannot_be_reduced_below_existing_reservations() {
         let mut contract = setup();
         context(account("agent.testnet"), 20);
-        contract.authorize_spend("reserved-before-update".into(), account("merchant.testnet"), 40, 1, 500);
+        contract.authorize_spend(
+            "reserved-before-update".into(),
+            account("merchant.testnet"),
+            40,
+            1,
+            500,
+        );
 
         context(account("owner.testnet"), 30);
-        contract.set_policy("daily".into(), Policy {
-            enabled: true,
-            expires_at_ns: 1_000,
-            max_per_transaction: 30,
-            max_total: 30,
-            allowed_destinations: vec![account("merchant.testnet")],
-        });
+        contract.set_policy(
+            "daily".into(),
+            Policy {
+                enabled: true,
+                expires_at_ns: 1_000,
+                max_per_transaction: 30,
+                max_total: 30,
+                allowed_destinations: vec![account("merchant.testnet")],
+            },
+        );
     }
 
     #[test]
@@ -617,7 +713,6 @@ mod tests {
         assert_eq!(contract.get_policy_spend("daily".into()), 0);
         assert_eq!(contract.get_decision_count(), 0);
     }
-
 
     #[test]
     fn exposes_consumed_nonce_and_intent_for_read_only_preflight() {
@@ -648,13 +743,16 @@ mod tests {
     fn policy_id_length_is_bounded() {
         let mut contract = setup();
         context(account("owner.testnet"), 30);
-        contract.set_policy("p".repeat(MAX_POLICY_ID_BYTES + 1), Policy {
-            enabled: true,
-            expires_at_ns: 1_000,
-            max_per_transaction: 60,
-            max_total: 100,
-            allowed_destinations: vec![account("merchant.testnet")],
-        });
+        contract.set_policy(
+            "p".repeat(MAX_POLICY_ID_BYTES + 1),
+            Policy {
+                enabled: true,
+                expires_at_ns: 1_000,
+                max_per_transaction: 60,
+                max_total: 100,
+                allowed_destinations: vec![account("merchant.testnet")],
+            },
+        );
     }
 
     #[test]
@@ -662,13 +760,19 @@ mod tests {
     fn destination_allowlist_length_is_bounded() {
         let mut contract = setup();
         context(account("owner.testnet"), 30);
-        contract.set_policy("large-list".into(), Policy {
-            enabled: true,
-            expires_at_ns: 1_000,
-            max_per_transaction: 60,
-            max_total: 100,
-            allowed_destinations: vec![account("merchant.testnet"); MAX_ALLOWED_DESTINATIONS + 1],
-        });
+        contract.set_policy(
+            "large-list".into(),
+            Policy {
+                enabled: true,
+                expires_at_ns: 1_000,
+                max_per_transaction: 60,
+                max_total: 100,
+                allowed_destinations: vec![
+                    account("merchant.testnet");
+                    MAX_ALLOWED_DESTINATIONS + 1
+                ],
+            },
+        );
     }
 
     #[test]
@@ -676,13 +780,16 @@ mod tests {
     fn empty_destination_allowlist_is_denied() {
         let mut contract = setup();
         context(account("owner.testnet"), 30);
-        contract.set_policy("empty-list".into(), Policy {
-            enabled: true,
-            expires_at_ns: 1_000,
-            max_per_transaction: 60,
-            max_total: 100,
-            allowed_destinations: vec![],
-        });
+        contract.set_policy(
+            "empty-list".into(),
+            Policy {
+                enabled: true,
+                expires_at_ns: 1_000,
+                max_per_transaction: 60,
+                max_total: 100,
+                allowed_destinations: vec![],
+            },
+        );
     }
 
     #[test]
@@ -690,13 +797,16 @@ mod tests {
     fn zero_per_transaction_limit_is_denied() {
         let mut contract = setup();
         context(account("owner.testnet"), 30);
-        contract.set_policy("zero-limit".into(), Policy {
-            enabled: true,
-            expires_at_ns: 1_000,
-            max_per_transaction: 0,
-            max_total: 100,
-            allowed_destinations: vec![account("merchant.testnet")],
-        });
+        contract.set_policy(
+            "zero-limit".into(),
+            Policy {
+                enabled: true,
+                expires_at_ns: 1_000,
+                max_per_transaction: 0,
+                max_total: 100,
+                allowed_destinations: vec![account("merchant.testnet")],
+            },
+        );
     }
 
     #[test]
@@ -704,13 +814,16 @@ mod tests {
     fn total_budget_below_per_transaction_limit_is_denied() {
         let mut contract = setup();
         context(account("owner.testnet"), 30);
-        contract.set_policy("bad-budget".into(), Policy {
-            enabled: true,
-            expires_at_ns: 1_000,
-            max_per_transaction: 60,
-            max_total: 59,
-            allowed_destinations: vec![account("merchant.testnet")],
-        });
+        contract.set_policy(
+            "bad-budget".into(),
+            Policy {
+                enabled: true,
+                expires_at_ns: 1_000,
+                max_per_transaction: 60,
+                max_total: 59,
+                allowed_destinations: vec![account("merchant.testnet")],
+            },
+        );
     }
 
     #[test]
@@ -752,7 +865,6 @@ mod tests {
         context(account("attacker.testnet"), 500);
         contract.release_expired_reservation(decision.decision_id);
     }
-
 
     #[test]
     fn two_agents_cannot_race_shared_policy_budget_past_limit() {
@@ -808,13 +920,16 @@ mod tests {
     fn checked_spend_overflow_fails_without_mutating_state() {
         let mut contract = setup();
         context(account("owner.testnet"), 15);
-        contract.set_policy("daily".into(), Policy {
-            enabled: true,
-            expires_at_ns: u64::MAX,
-            max_per_transaction: u128::MAX,
-            max_total: u128::MAX,
-            allowed_destinations: vec![account("merchant.testnet")],
-        });
+        contract.set_policy(
+            "daily".into(),
+            Policy {
+                enabled: true,
+                expires_at_ns: u64::MAX,
+                max_per_transaction: u128::MAX,
+                max_total: u128::MAX,
+                allowed_destinations: vec![account("merchant.testnet")],
+            },
+        );
 
         context(account("agent.testnet"), 20);
         contract.authorize_spend(
@@ -859,7 +974,9 @@ mod tests {
 
         context(account("new-owner.testnet"), 31);
         contract.register_agent(account("another-agent.testnet"), "daily".into());
-        assert!(contract.get_agent_grant(account("another-agent.testnet")).is_some());
+        assert!(contract
+            .get_agent_grant(account("another-agent.testnet"))
+            .is_some());
     }
 
     #[test]

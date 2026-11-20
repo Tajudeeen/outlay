@@ -7,13 +7,11 @@ on:
   push:
     paths:
       - "Cargo.toml"
-      - "rust-toolchain.toml"
       - "contracts/**"
       - ".github/workflows/contract.yml"
   pull_request:
     paths:
       - "Cargo.toml"
-      - "rust-toolchain.toml"
       - "contracts/**"
       - ".github/workflows/contract.yml"
 
