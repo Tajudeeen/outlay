@@ -324,10 +324,7 @@ impl Outlay {
     /// Read-only replay checks for advisory API preflight. Contract authorization
     /// still performs the authoritative checks atomically during submission.
     pub fn is_nonce_consumed(&self, agent_id: AccountId, nonce: String) -> bool {
-        let parsed_nonce = match nonce.parse::<u64>() {
-            Ok(val) => val,
-            Err(_) => return false,
-        };
+        let parsed_nonce = nonce.parse::<u64>().expect("INVALID_NONCE");
         self.consumed_nonces
             .contains(&format!("{}:{}", agent_id, parsed_nonce))
     }
@@ -993,12 +990,5 @@ mod tests {
         let mut contract = setup();
         context(account("owner.testnet"), 30);
         contract.transfer_ownership(account("owner.testnet"));
-    }
-
-    #[test]
-    fn is_nonce_consumed_returns_false_on_invalid_numeric_nonce() {
-        let contract = setup();
-        assert!(!contract.is_nonce_consumed(account("agent.testnet"), "not-a-number".into()));
-        assert!(!contract.is_nonce_consumed(account("agent.testnet"), "-1".into()));
     }
 }
